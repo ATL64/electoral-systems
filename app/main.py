@@ -23,6 +23,11 @@ ELECTIONS = {
         '2019-11-10': Election.Spain_2019_11(),
         '2019-04-28': Election.Spain_2019_04(),
         '2016-06-26': Election.Spain_2016_06(),
+        '2015-12-20': Election.Spain_2015_12(),
+        '2011-11-20': Election.Spain_2011_11(),
+        '2008-03-09': Election.Spain_2008_03(),
+        '2004-03-14': Election.Spain_2004_03(),
+        '2000-03-12': Election.Spain_2000_03(),
     }
 }
 
@@ -173,6 +178,11 @@ def update_dropdown_elections(country):
         {'label': '2019-11-10', 'value': '2019-11-10'},
         {'label': '2019-04-28', 'value': '2019-04-28'},
         {'label': '2016-06-26', 'value': '2016-06-26'},
+        {'label': '2015-12-20', 'value': '2015-12-20'},
+        {'label': '2011-11-20', 'value': '2011-11-20'},
+        {'label': '2008-03-09', 'value': '2008-03-09'},
+        {'label': '2004-03-14', 'value': '2004-03-14'},
+        {'label': '2000-03-12', 'value': '2000-03-12'},
     ]
     return options
 
@@ -221,6 +231,7 @@ def update_maps(compare, system_1, level_1, threshold_1, system_2, level_2, thre
 
     if compare:
         disable = False
+
         s1 = {'name': system_1, 'threshold': threshold_1, 'level': level_1}
         s2 = {'name': system_2, 'threshold': threshold_2, 'level': level_2}
         metrics = election.get_compare_metrics(s1, s2)
@@ -233,13 +244,13 @@ def update_maps(compare, system_1, level_1, threshold_1, system_2, level_2, thre
                                                 zmin=0, zmax=max(seat_diff),
                                                 marker_line_width=0))
 
-        #print(map_fig)
         seats_won = metrics['seats_won']
         bar_fig = {'parties': [k for k in seats_won.keys()], 'seats_won': [v for v in seats_won.values()]}
         bar_fig = px.bar(bar_fig, x='parties', y='seats_won')
 
     else:
         disable = True
+
         s1 = {'name': system_1, 'threshold': threshold_1, 'level': level_1}
         metrics = election.get_single_metrics(s1)
 

@@ -4,16 +4,15 @@ import copy
 import operator
 
 class Region():
-    def __init__(self, name: str, code: int, level: int):
+    def __init__(self, name: str, level: int):
         self.name = name
-        self.code = code
         self.level = level
         return
 
 
 class Electoral_Region(Region):
-    def __init__(self, name: str, code: int, level: int, census: int, n_seats: int, votes: dict, nota: int, spoilt_votes: int):
-        super(Electoral_Region, self).__init__(name, code, level)
+    def __init__(self, name: str, level: int, census: int, n_seats: int, votes: dict, nota: int, spoilt_votes: int):
+        super(Electoral_Region, self).__init__(name, level)
         self.census = census
         self.n_seats = n_seats
         self.votes = votes

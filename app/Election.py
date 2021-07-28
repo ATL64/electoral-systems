@@ -2,12 +2,13 @@ from abc import ABC, abstractmethod
 from collections import Counter
 from datetime import datetime
 import pandas as pd
+import pickle
 
 import Countries
 from Regions import Electoral_Region
 
 class Election(ABC):
-    def __init__(self, date: str, country: Countries.Country):
+    def __init__(self, country: Countries.Country, date: str = None):
         self.date = date
         self.country = country
         return
@@ -18,14 +19,6 @@ class Election(ABC):
         """
         A list of items of the class Regions.Electoral_Regions, containing all
         the information of a particular election.
-        """
-        pass
-
-    @property
-    @abstractmethod
-    def level(self):
-        """
-        The level of the regions of the election.
         """
         pass
 
@@ -92,140 +85,81 @@ class Election(ABC):
 
         return {'lost_votes_percentage': lost_votes_percentage, 'party_lost_votes': party_lost_votes}
 
-class Spain_2019_11(Election):
-    def __init__(self):
-        super(Spain_2019_11, self).__init__(date=datetime(2019, 11, 10, 0, 0, 0), country=Countries.Spain())
-        parsed_data = self.parse_electoral_data()
+
+class Spain_Election(Election):
+    def __init__(self, data_file: str):
+        date = data_file.split('_')[-1].split('.')[0]
+        super(Spain_Election, self).__init__(country=Countries.Spain(), date=date)
+
+        parsed_data = self.parse_data(data_file)
         self._regions = parsed_data['regions']
         self._parties = parsed_data['parties']
-        return
 
-    def parse_electoral_data(self):
-        df = pd.read_excel('../data/Spain/PROV_02_201911_1.xlsx',
-                           header=5,
-                           nrows=52,
-                           usecols='A:ET')
-        parties = pd.read_excel('../data/Spain/PROV_02_201911_1.xlsx',
-                                header=3,
-                                usecols='Q:ET',
-                                nrows=1)
-
-        parties = parties[parties.columns[::2]]
-        parties = parties.loc[0].values.flatten().tolist()
-
-        level_0_data = {
-            'region_name': 'Spain',
-            'code': 0,
-            'level': 0,
-            'census': 0,
-            'n_seats': 0,
-            'votes': Counter(),
-            'nota': 0,
-            'split_votes': 0,
+        self._region_hierarchy = {
+            'Andalucía': ['Almería', 'Cádiz', 'Córdoba', 'Granada', 'Huelva', 'Jaén', 'Málaga', 'Sevilla'],
+            'Aragón': ['Huesca', 'Teruel', 'Zaragoza'],
+            'Cantabria': ['Cantabria'],
+            'Castilla y León': ['Ávila', 'Burgos', 'León', 'Palencia', 'Salamanca', 'Segovia', 'Soria', 'Valladolid', 'Zamora'],
+            'Castilla-La Mancha': ['Albacete', 'Ciudad Real', 'Cuenca', 'Guadalajara', 'Toledo'],
+            'Cataluña': ['Barcelona', 'Girona', 'Lleida', 'Tarragona'],
+            'Ceuta y Melilla': ['Ceuta', 'Melilla'],
+            'Comunidad de Madrid': ['Madrid'],
+            'Comunidad Foral de Navarra': ['Navarra'],
+            'Comunidad Valenciana': ['Alacant', 'Castelló', 'València'],
+            'Extremadura': ['Badajoz', 'Cáceres'],
+            'Galicia': ['A Coruña', 'Lugo', 'Ourense', 'Pontevedra'],
+            'Islas Baleares': ['Illes Balears'],
+            'Islas Canarias': ['Las Palmas', 'Santa Cruz de Tenerife'],
+            'La Rioja': ['La Rioja'],
+            'País Vasco': ['Araba', 'Bizkaia', 'Gipuzcoa'],
+            'Principado de Asturias': ['Asturias'],
+            'Región de Murcia': ['Murcia']
         }
-        level_1_regions = self.country.regions()[1]['regions']
-        level_1_data = {}
-        for code, region in level_1_regions.items():
-            level_1_data[region] = {
-                'region_name': region,
-                'code': code,
-                'level': 1,
-                'census': 0,
-                'n_seats': 0,
-                'votes': Counter(),
-                'nota': 0,
-                'split_votes': 0,
-            }
 
-        level = 2
-        electoral_regions = []
-        for idx, row in df.iterrows():
-            region_name = row['Nombre de Provincia'].strip()
-            if region_name.startswith('Alicante'):
-                region_name = 'Alacant'
-            elif region_name.startswith('Valencia'):
-                region_name = 'València'
-            elif region_name.startswith('Gipuzkoa'):
-                region_name = 'Gipuzcoa'
-            elif region_name.startswith('Araba'):
-                region_name = 'Araba'
-            elif region_name.startswith('Castellón'):
-                region_name = 'Castelló'
-            else:
-                region_name = region_name
-            census = row['Total censo electoral']
-            votes = {parties[0]: row["Votos"]}
-            n_seats = row["Diputados"]
-            for i in range(1, len(parties)):
-                votes[parties[i]] = row[f"Votos.{i}"]
-                n_seats += row[f"Diputados.{i}"]
-            nota = row['Votos en blanco']
-            split_votes = row['Votos nulos']
-            code = row['Código de Provincia']
+    def parse_data(self, filename):
+        with open(filename, 'rb') as f:
+            data = pickle.load(f)
 
-            # Check that total number of votes makes sense?
-
-            electoral_regions.append(Electoral_Region(region_name, code, level, census, n_seats, votes, nota, split_votes))
-
-            # Add level 1 data
-            lvl1_name = row['Nombre de Comunidad'].strip()
-            if lvl1_name.startswith('Ciudad'): # Ciudad de Ceuta, Ciudad de Melilla
-                lvl1_name = 'Ceuta y Melilla'
-            elif lvl1_name == 'Castilla - La Mancha':
-                lvl1_name = 'Castilla-La Mancha'
-            elif lvl1_name.startswith('Illes'):
-                lvl1_name = 'Islas Baleares'
-            elif lvl1_name.startswith('Comunitat'):
-                lvl1_name = 'Comunidad Valenciana'
-            elif lvl1_name.startswith('Canarias'):
-                lvl1_name = 'Islas Canarias'
-            level_1_data[lvl1_name]['census'] += census
-            level_1_data[lvl1_name]['n_seats'] += n_seats
-            level_1_data[lvl1_name]['votes'] += votes
-            level_1_data[lvl1_name]['nota'] += nota
-            level_1_data[lvl1_name]['split_votes'] += split_votes
-
-            # Add level 0 data
-            level_0_data['census'] += census
-            level_0_data['n_seats'] += n_seats
-            level_0_data['votes'] += votes
-            level_0_data['nota'] += nota
-            level_0_data['split_votes'] += split_votes
-
-
-        # Level 1 electoral regions
-        level_1_electoral_regions = []
-        for region, data in level_1_data.items():
-            level_1_electoral_regions.append(Electoral_Region(
-                data['region_name'],
-                data['code'],
-                data['level'],
-                data['census'],
-                data['n_seats'],
-                data['votes'],
-                data['nota'],
-                data['split_votes'],
-            ))
-
-        # Level 0 electoral region
         level_0_electoral_region = Electoral_Region(
-            'Spain',
-            0,
-            0,
-            level_0_data['census'],
-            level_0_data['n_seats'],
-            level_0_data['votes'],
-            level_0_data['nota'],
-            level_0_data['split_votes'],
+            data['data'][0]['region_name'],
+            data['data'][0]['level'],
+            data['data'][0]['census'],
+            data['data'][0]['n_seats'],
+            data['data'][0]['votes'],
+            data['data'][0]['nota'],
+            data['data'][0]['split_votes'],
         )
 
-        return_electoral_regions = {
+        level_1_electoral_regions = []
+        for region, results in data['data'][1].items():
+            level_1_electoral_regions.append(Electoral_Region(
+                results['region_name'],
+                results['level'],
+                results['census'],
+                results['n_seats'],
+                results['votes'],
+                results['nota'],
+                results['split_votes'],
+            ))
+
+        level_2_electoral_regions = []
+        for region, results in data['data'][2].items():
+            level_2_electoral_regions.append(Electoral_Region(
+                results['region_name'],
+                results['level'],
+                results['census'],
+                results['n_seats'],
+                results['votes'],
+                results['nota'],
+                results['split_votes'],
+            ))
+
+        electoral_regions = {
             0: [level_0_electoral_region],
             1: level_1_electoral_regions,
-            2: electoral_regions,
+            2: level_2_electoral_regions,
         }
-        return {'parties': parties, 'regions': return_electoral_regions}
-        #return {'parties': parties, 'regions': electoral_regions}
+        return {'parties': data['parties'], 'regions': electoral_regions}
 
     def regions(self):
         return self._regions
@@ -233,136 +167,51 @@ class Spain_2019_11(Election):
     def parties(self):
         return self._parties
 
-    def level(self):
-        return 2
-
     def electoral_system(self):
         return {'name': 'dHondt', 'threshold': 0.03, 'level': 2}
 
-class Spain_2019_04(Election):
+class Spain_2019_11(Spain_Election):
     def __init__(self):
-        super(Spain_2019_04, self).__init__(date=datetime(2019, 4, 28, 0, 0, 0), country=Countries.Spain())
-        parsed_data = self.parse_electoral_data()
-        self._regions = parsed_data['regions']
-        self._parties = parsed_data['parties']
+        super(Spain_2019_11, self).__init__(data_file='data/Spain/election_data_2019-11-10.pkl')
         return
 
-    def parse_electoral_data(self):
-        df = pd.read_excel('../data/Spain/PROV_02_201904_1.xlsx',
-                           header=5,
-                           nrows=52,
-                           usecols='A:ET')
-        parties = pd.read_excel('../data/Spain/PROV_02_201904_1.xlsx',
-                                header=3,
-                                usecols='Q:ET',
-                                nrows=1)
-
-        parties = parties[parties.columns[::2]]
-        parties = parties.loc[0].values.flatten().tolist()
-
-        level = 2
-        electoral_regions = []
-        for idx, row in df.iterrows():
-            region_name = row['Nombre de Provincia'].strip()
-            if region_name.startswith('Alicante'):
-                region_name = 'Alacant'
-            elif region_name.startswith('Valencia'):
-                region_name = 'València'
-            elif region_name.startswith('Gipuzkoa'):
-                region_name = 'Gipuzcoa'
-            elif region_name.startswith('Araba'):
-                region_name = 'Araba'
-            elif region_name.startswith('Castellón'):
-                region_name = 'Castelló'
-            else:
-                region_name = region_name
-            census = row['Total censo electoral']
-            votes = {parties[0]: row["Votos"]}
-            n_seats = row["Diputados"]
-            for i in range(1, len(parties)):
-                votes[parties[i]] = row[f"Votos.{i}"]
-                n_seats += row[f"Diputados.{i}"]
-            nota = row['Votos en blanco']
-            split_votes = row['Votos nulos']
-            code = row['Código de Provincia']
-
-            # Check that total number of votes makes sense?
-
-            electoral_regions.append(Electoral_Region(region_name, code, level, census, n_seats, votes, nota, split_votes))
-
-        return {'parties': parties, 'regions': electoral_regions}
-
-    def regions(self):
-        return self._regions
-
-    def parties(self):
-        return self._parties
-
-    def level(self):
-        return 2
-
-    def electoral_system(self):
-        return {'name': 'dHondt', 'threshold': 0.03, 'level': 2}
-
-class Spain_2016_06(Election):
+class Spain_2019_04(Spain_Election):
     def __init__(self):
-        super(Spain_2016_06, self).__init__(date=datetime(2016, 6, 16, 0, 0, 0), country=Countries.Spain())
-        parsed_data = self.parse_electoral_data()
-        self._regions = parsed_data['regions']
-        self._parties = parsed_data['parties']
+        super(Spain_2019_04, self).__init__(data_file='data/Spain/election_data_2019-04-28.pkl')
         return
 
-    def parse_electoral_data(self):
-        df = pd.read_excel('../data/Spain/PROV_02_201606_1.xlsx',
-                           header=5,
-                           nrows=52,
-                           usecols='A:DN')
-        parties = pd.read_excel('../data/Spain/PROV_02_201606_1.xlsx',
-                                header=3,
-                                usecols='Q:DN',
-                                nrows=1)
 
-        parties = parties[parties.columns[::2]]
-        parties = parties.loc[0].values.flatten().tolist()
+class Spain_2016_06(Spain_Election):
+    def __init__(self):
+        super(Spain_2016_06, self).__init__(data_file='data/Spain/election_data_2016-06-26.pkl')
+        return
 
-        level = 2
-        electoral_regions = []
-        for idx, row in df.iterrows():
-            region_name = row['Nombre de Provincia'].strip()
-            if region_name.startswith('Alicante'):
-                region_name = 'Alacant'
-            elif region_name.startswith('Valencia'):
-                region_name = 'València'
-            elif region_name.startswith('Gipuzkoa'):
-                region_name = 'Gipuzcoa'
-            elif region_name.startswith('Araba'):
-                region_name = 'Araba'
-            elif region_name.startswith('Castellón'):
-                region_name = 'Castelló'
-            else:
-                region_name = region_name
-            census = row['Total censo electoral']
-            votes = {parties[0]: row["Votos"]}
-            n_seats = row["Diputados"]
-            for i in range(1, len(parties)):
-                votes[parties[i]] = row[f"Votos.{i}"]
-                n_seats += row[f"Diputados.{i}"]
-            nota = row['Votos en blanco']
-            split_votes = row['Votos nulos']
-            code = row['Código de Provincia']
+class Spain_2015_12(Spain_Election):
+    def __init__(self):
+        super(Spain_2015_12, self).__init__(data_file='data/Spain/election_data_2015-12-20.pkl')
+        return
 
-            electoral_regions.append(Electoral_Region(region_name, code, level, census, n_seats, votes, nota, split_votes))
+class Spain_2011_11(Spain_Election):
+    def __init__(self):
+        super(Spain_2011_11, self).__init__(data_file='data/Spain/election_data_2011-11-20.pkl')
+        return
 
-        return {'parties': parties, 'regions': electoral_regions}
+class Spain_2008_03(Spain_Election):
+    def __init__(self):
+        super(Spain_2008_03, self).__init__(data_file='data/Spain/election_data_2008-03-09.pkl')
+        return
 
-    def regions(self):
-        return self._regions
+class Spain_2008_03(Spain_Election):
+    def __init__(self):
+        super(Spain_2008_03, self).__init__(data_file='data/Spain/election_data_2008-03-09.pkl')
+        return
 
-    def parties(self):
-        return self._parties
+class Spain_2004_03(Spain_Election):
+    def __init__(self):
+        super(Spain_2004_03, self).__init__(data_file='data/Spain/election_data_2004-03-14.pkl')
+        return
 
-    def level(self):
-        return 2
-
-    def electoral_system(self):
-        return {'name': 'dHondt', 'threshold': 0.03, 'level': 2}
+class Spain_2000_03(Spain_Election):
+    def __init__(self):
+        super(Spain_2000_03, self).__init__(data_file='data/Spain/election_data_2000-03-12.pkl')
+        return
