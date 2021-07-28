@@ -48,8 +48,9 @@ CONTENT_STYLE = {
     "left": 0,
     "right": 0,
     "margin-top": 25,
-    "margin-left": "18rem",
-    "margin-right": "2rem",
+    "margin-left": "5rem",
+    "margin-right": "5rem",
+    "margin-bottom": 100,
     #"padding": "2rem 1rem",
     "zIndex": 80
 }
@@ -129,6 +130,30 @@ threshold_2 = dcc.Input(
     value=3
 )
 
+info_box_1 = dbc.Card(
+    [
+        dbc.CardHeader("", id='card-1-header'),
+        dbc.CardBody(
+            [
+                html.H4("", id="card-1-title"),
+            ]
+        ),
+    ],
+    style={"width": "18rem"},
+)
+
+info_box_2 = dbc.Card(
+    [
+        dbc.CardHeader("", id='card-2-header'),
+        dbc.CardBody(
+            [
+                html.H4("", id="card-2-title"),
+            ]
+        ),
+    ],
+    style={"width": "18rem"},
+)
+
 content = html.Div([
         dbc.Row([
             dbc.Col(dropdown_countries, width=2),
@@ -149,6 +174,14 @@ content = html.Div([
             dbc.Col(html.P(), width=4),
             dbc.Col(threshold_1, width=2),
             dbc.Col(threshold_2, width=2),
+        ]),
+        html.Br(),
+        dbc.Row([
+            dbc.Col(html.P(), width=1),
+            dbc.Col(info_box_1, width=4),
+            dbc.Col(html.P(), width=2),
+            dbc.Col(info_box_2, width=4),
+            dbc.Col(html.P(), width=1),
         ]),
         html.Br(),
         dbc.Row([
@@ -207,6 +240,10 @@ def set_default_election_values(elections, country):
         Output('dropdown-system-2', 'disabled'),
         Output('dropdown-region-level-2', 'disabled'),
         Output('threshold-2', 'disabled'),
+        Output('card-1-header', 'children'),
+        Output('card-1-title', 'children'),
+        Output('card-2-header', 'children'),
+        Output('card-2-title', 'children'),
     ],
     [
         Input("switch-compare", "value"),
@@ -240,13 +277,18 @@ def update_maps(compare, system_1, level_1, threshold_1, system_2, level_2, thre
         map_fig = go.Figure(go.Choroplethmapbox(geojson=election.country.regions()[level_1]['geojson'],
                                                 locations=locations,
                                                 z=seat_diff,
-                                                colorscale="Viridis",
+                                                colorscale="Reds", # Options: Greys,YlGnBu,Greens,YlOrR d,Bluered,RdBu,Reds,Blues,Picnic,Rainbow,Portland,Jet,H ot,Blackbody,Earth,Electric,Viridis,Cividis.
                                                 zmin=0, zmax=max(seat_diff),
                                                 marker_line_width=0))
 
-        seats_won = metrics['seats_won']
+        seats_won = {k:v for k,v in metrics['seats_won'].items() if v != 0}
         bar_fig = {'parties': [k for k in seats_won.keys()], 'seats_won': [v for v in seats_won.values()]}
         bar_fig = px.bar(bar_fig, x='parties', y='seats_won')
+
+        card_1_header = 'Total Seat Difference'
+        card_1_title = str(sum(seat_diff)  // 2) + '/' + str(regions[0][0].n_seats)
+        card_2_header = 'Seat Difference Percentage'
+        card_2_title = "{:.2f}%".format(100 * (sum(seat_diff)  // 2) / regions[0][0].n_seats)
 
     else:
         disable = True
@@ -258,14 +300,22 @@ def update_maps(compare, system_1, level_1, threshold_1, system_2, level_2, thre
         map_fig = go.Figure(go.Choroplethmapbox(geojson=election.country.regions()[level_1]['geojson'],
                                                 locations=locations,
                                                 z=lost_votes_percentage,
-                                                colorscale="Viridis",
+                                                colorscale="Reds",
                                                 zmin=0, zmax=1,
                                                 marker_line_width=0))
 
         party_lost_votes = metrics['party_lost_votes']
+        total_lost_votes = sum(party_lost_votes.values())
         party_lost_votes = party_lost_votes.most_common(10)
         bar_fig = {'parties': [x[0] for x in party_lost_votes], 'lost_votes': [x[1] for x in party_lost_votes]}
         bar_fig = px.bar(bar_fig, x='parties', y='lost_votes')
+
+        total_votes = sum(regions[0][0].votes.values())
+
+        card_1_header = 'Total % of Lost Votes'
+        card_1_title = "{:.2f}%".format(100 * total_lost_votes / total_votes)
+        card_2_header = 'Total Lost Votes'
+        card_2_title = str(total_lost_votes)
 
 
     map_fig.update_layout(mapbox_style="light",
@@ -274,7 +324,7 @@ def update_maps(compare, system_1, level_1, threshold_1, system_2, level_2, thre
                           mapbox_center = election.country.center(),
                           margin={"r":0,"t":0,"l":0,"b":0})
 
-    return map_fig, bar_fig, disable, disable, disable
+    return map_fig, bar_fig, disable, disable, disable, card_1_header, card_1_title, card_2_header, card_2_title
 
 
 if __name__ == '__main__':
