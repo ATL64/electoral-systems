@@ -375,7 +375,7 @@ def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, thres
                                                 locations=locations,
                                                 z=seat_diff,
                                                 colorscale="Reds", # Options: Greys,YlGnBu,Greens,YlOrR d,Bluered,RdBu,Reds,Blues,Picnic,Rainbow,Portland,Jet,H ot,Blackbody,Earth,Electric,Viridis,Cividis.
-                                                zmin=0, zmax=min(10, max(seat_diff)),
+                                                zmin=0, zmax=max(10, max(seat_diff)),
                                                 marker_line_width=0))
 
         seats_won = {k:v for k,v in metrics['seats_won'].items() if v != 0}
@@ -388,10 +388,12 @@ def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, thres
         )])
         bar_fig.update_layout(title_text='Total Seats Won/Lost')
 
+        print(seat_diff)
+        print(sum(seat_diff))
         card_1_header = 'Total Seat Difference'
-        card_1_title = str(sum(seat_diff)  // 2) + '/' + str(regions[0][0].n_seats)
+        card_1_title = str(sum(seat_diff)) + '/' + str(regions[0][0].n_seats)
         card_2_header = 'Seat Difference Percentage'
-        card_2_title = "{:.2f}%".format(100 * (sum(seat_diff)  // 2) / regions[0][0].n_seats)
+        card_2_title = "{:.2f}%".format(100 * (sum(seat_diff)) / regions[0][0].n_seats)
 
         # Pie charts
         final_results_1 = metrics['final_results_1']

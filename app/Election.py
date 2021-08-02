@@ -179,9 +179,13 @@ class Spain_Election(Election):
         self.colors = {
             'AMAIUR': '#087178',
             'ARALAR-ZUTIK': '#BD0000', # 2004
+            'BLOC-EV': '#4E9E41', # 2004
+            'BLOC-VERDS': '#4E9E41',
             'BNG': '#ADCFEF',
             'B.N.G.': '#ADCFEF',
+            'BNG-NÓS': '#ADCFEF',
             'NÓS': '#ADCFEF',
+            'CA': '#006633', # Coalición Andalucista, 2008
             'CC': '#FFD700',
             'CC-PNC': '#FFD700',
             'CCa-PNC-NC': '#FFD700',
@@ -199,6 +203,8 @@ class Spain_Election(Election):
             'CUP-PR': '#FFED00',
             'EA': '#77AC1C', # Eusko-Alkartasuna, 2004
             'EAJ-PNV': '#4AAE4A',
+            'Eb': '#DDDDDD', # Escaños en blanco, 2011
+            'CENB': '#DDDDDD', # 2004
             'ECP-GUANYEM EL CANVI': '#5A205A',
             'ECP': '#5A205A',
             'EH Bildu': '#B5CF18',
@@ -210,6 +216,8 @@ class Spain_Election(Election):
             'ERC-SOBIRANISTES': '#FFB232',
             'ESQUERRA': '#FFB232',
             'FAC': '#10286B',
+            'FRONT REPUBLICÀ': '#EB2071', # 2019
+            'GIL': '#029138', # 2000
             'IC-V': '#4E9E41', # Iniciativa per Catalunya, 2000
             'IU': '#D56545',
             'I.U.': '#D56545',
@@ -222,6 +230,7 @@ class Spain_Election(Election):
             'Na-Bai': '#F75E42',
             'NA-BAI': '#F75E42',
             'GBAI': '#F75E42',
+            'MÁS PAÍS': '#0FDEC4', # 2019
             'NA+': '#819DA3',
             'NC-CCN': '#BAF73E',
             'Nca': '#639E42',
@@ -245,10 +254,17 @@ class Spain_Election(Election):
             'PODEMOS-EU': '#5A205A',
             'PODEMOS-IU': '#5A205A',
             'PODEMOS-IU-EQUO': '#5A205A',
+            'PxC': '#444042', # 2011
+            'RECORTES CERO-GV': '#00862A', # 2019
+            'RECORTES CERO-GRUPO VERDE': '#00862A',
+            'RECORTES CE': '#00862A',
+            'unio.cat': '#18307B',
             'UPL': '#B41062', # Unión del Pueblo Leonés, 2000
             'UPYD': '#E9008C',
             'UPyD': '#E9008C',
             'UV': '#1F4473', # Unió Valenciana, 2000
+            'VERDES': '#099E40', # 2008
+            'LV-E': '#099E40', # 2004
             'VOX': '#63BE21',
             '¡TERUEL EXISTE!': '#037252',
         }
