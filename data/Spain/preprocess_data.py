@@ -60,6 +60,7 @@ def preprocess_electoral_data(filename, date, df_cols, df_header, parties_cols, 
 
     parties = parties[parties.columns[::2]]
     parties = parties.loc[0].values.flatten().tolist()
+    parties = [x.strip() for x in parties]
 
     level_0_data = {
         'region_name': 'Spain',
@@ -191,11 +192,11 @@ def preprocess_electoral_data(filename, date, df_cols, df_header, parties_cols, 
 if __name__=="__main__":
     #preprocess_level_2_regions()
     #preprocess_level_1_regions()
-    preprocess_electoral_data('PROV_02_201911_1.xlsx', '_2019-11-10', 'A:ET', 5, 'Q:ET', 3)
-    preprocess_electoral_data('PROV_02_201904_1.xlsx', '_2019-04-28', 'A:ET', 5, 'Q:ET', 3)
-    preprocess_electoral_data('PROV_02_201606_1.xlsx', '_2016-06-26', 'A:DN', 5, 'Q:DN', 3)
+    #preprocess_electoral_data('PROV_02_201911_1.xlsx', '_2019-11-10', 'A:ET', 5, 'Q:ET', 3)
+    #preprocess_electoral_data('PROV_02_201904_1.xlsx', '_2019-04-28', 'A:ET', 5, 'Q:ET', 3)
+    #preprocess_electoral_data('PROV_02_201606_1.xlsx', '_2016-06-26', 'A:DN', 5, 'Q:DN', 3)
     preprocess_electoral_data('PROV_02_201512_1.xlsx', '_2015-12-20', 'A:DX', 6, 'Q:DX', 4)
-    preprocess_electoral_data('PROV_02_201111_1.xlsx', '_2011-11-20', 'A:EJ', 5, 'Q:EJ', 3)
-    preprocess_electoral_data('PROV_02_200803_1.xlsx', '_2008-03-09', 'A:HC', 5, 'P:HC', 3)
-    preprocess_electoral_data('PROV_02_200403_1.xlsx', '_2004-03-14', 'A:GY', 5, 'P:GY', 3)
-    preprocess_electoral_data('PROV_02_200003_1.xlsx', '_2000-03-12', 'A:HA', 5, 'P:HA', 3)
+    #preprocess_electoral_data('PROV_02_201111_1.xlsx', '_2011-11-20', 'A:EJ', 5, 'Q:EJ', 3)
+    #preprocess_electoral_data('PROV_02_200803_1.xlsx', '_2008-03-09', 'A:HC', 5, 'P:HC', 3)
+    #preprocess_electoral_data('PROV_02_200403_1.xlsx', '_2004-03-14', 'A:GY', 5, 'P:GY', 3)
+    #preprocess_electoral_data('PROV_02_200003_1.xlsx', '_2000-03-12', 'A:HA', 5, 'P:HA', 3)

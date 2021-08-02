@@ -50,15 +50,6 @@ class Spain(Country):
     def __init__(self):
         super(Spain, self).__init__('Spain')
         self._regions = self.parse_regions()
-        """
-        self._regions = {
-            0: {
-                'geojson': gdf.loc[gdf['ADMIN'] == 'Spain']['geometry'].to_json(),
-                'regions': 'Spain',
-            }
-            2: self.parse_regions_2()
-        }
-        """
 
     def center(self):
         return {'lat': 40.3152161, 'lon': -3.8320321}

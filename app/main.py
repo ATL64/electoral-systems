@@ -380,8 +380,17 @@ def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, thres
                                                 marker_line_width=0))
 
         seats_won = {k:v for k,v in metrics['seats_won'].items() if v != 0}
-        bar_fig = {'parties': [k for k in seats_won.keys()], 'seats_won': [v for v in seats_won.values()]}
-        bar_fig = px.bar(bar_fig, x='parties', y='seats_won')
+        #bar_fig = {'parties': [k for k in seats_won.keys()], 'seats_won': [v for v in seats_won.values()]}
+        bar_colors = [election.colors[k] for k in seats_won.keys()]
+        bar_fig = go.Figure(data=[go.Bar(
+            x = [k for k in seats_won.keys()],
+            y = [v for v in seats_won.values()],
+            marker_color = bar_colors,
+        )])
+        bar_fig.update_layout(title_text='Total Seats Won/Lost')
+
+        #bar_fig = px.bar(bar_fig, x='parties', y='seats_won')
+        #bar_fig.update_traces(marker_colors=bar_colors)
 
         card_1_header = 'Total Seat Difference'
         card_1_title = str(sum(seat_diff)  // 2) + '/' + str(regions[0][0].n_seats)
@@ -392,11 +401,14 @@ def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, thres
         final_results_1 = metrics['final_results_1']
         final_results_2 = metrics['final_results_2']
         labels = list(set(final_results_1.keys()).union(set(final_results_2.keys())))
+        colors = [election.colors[x] for x in labels]
         # Create subplots: use 'domain' type for Pie subplot
         pie = make_subplots(rows=1, cols=2, specs=[[{'type':'domain'}, {'type':'domain'}]])
-        pie.add_trace(go.Pie(labels=labels, values=[final_results_1[x] if x in final_results_1 else 0 for x in labels], name="System 1"),
+        pie.add_trace(go.Pie(labels=labels, values=[final_results_1[x] if x in final_results_1 else 0 for x in labels],
+                             name="System 1", marker_colors=colors),
                       1, 1)
-        pie.add_trace(go.Pie(labels=labels, values=[final_results_2[x] if x in final_results_2 else 0 for x in labels], name="System 2"),
+        pie.add_trace(go.Pie(labels=labels, values=[final_results_2[x] if x in final_results_2 else 0 for x in labels],
+                             name="System 2", marker_colors=colors),
                       1, 2)
         # Use `hole` to create a donut-like pie chart
         pie.update_traces(hole=.4, hoverinfo="label+percent+name", textinfo='value', textfont_size=20, textposition='inside')

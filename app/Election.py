@@ -175,6 +175,81 @@ class Spain_Election(Election):
         self._regions = parsed_data['regions']
         self._parties = parsed_data['parties']
 
+        # See https://en.wikipedia.org/wiki/Category:Spain_political_party_colour_templates
+        self.colors = {
+            'AMAIUR': '#087178',
+            'BNG': '#ADCFEF',
+            'B.N.G.': '#ADCFEF',
+            'NÓS': '#ADCFEF',
+            'CC': '#FFD700',
+            'CC-PNC': '#FFD700',
+            'CCa-PNC-NC': '#FFD700',
+            'CCa-PNC': '#FFD700',
+            'CC-NC-PNC': '#FFD700',
+            'CDC': '#18307B',
+            'CHA': '#008A21', # Chunta Aragonesista, 2004
+            'CIU': '#18307B',
+            'CiU': '#18307B',
+            'DL': '#18307B',
+            'Cs': '#EB6109',
+            "C's": '#EB6109',
+            'COMPROMÍS 2019': '#DA5C31',
+            'COMPROMÍS-Q': '#DA5C31',
+            'CUP-PR': '#FFED00',
+            'EA': '#77AC1C', # Eusko-Alkartasuna, 2004
+            'EAJ-PNV': '#4AAE4A',
+            'ECP-GUANYEM EL CANVI': '#5A205A',
+            'ECP': '#5A205A',
+            'EH Bildu': '#B5CF18',
+            'EN COMÚ': '#5A205A',
+            'EQUO': '#8ABA18',
+            'ERC': '#8ABA18',
+            'ERC-CATSI': '#FFB232',
+            'ERC-SOBIRANISTES': '#FFB232',
+            'ESQUERRA': '#FFB232',
+            'FAC': '#10286B',
+            'IC-V': '#4E9E41', # Iniciativa per Catalunya, 2000
+            'IU': '#D56545',
+            'I.U.': '#D56545',
+            'IU-LV': '#D56545',
+            'IU-UPeC': '#D56545',
+            'JxCAT-JUNTS': '#5AB6A1',
+            'MÁS PAÍS-EQUO': '#0FDEC4',
+            'MÉS': '#D8DE40',
+            'MÉS COMPROMÍS': '#DA5C31',
+            'Na-Bai': '#F75E42',
+            'NA-BAI': '#F75E42',
+            'GBAI': '#F75E42',
+            'NA+': '#819DA3',
+            'NC-CCN': '#BAF73E',
+            'Nca': '#639E42',
+            'PA': '#005931', # Partido Andalucista, 2004
+            'PACMA': '#ADBE18',
+            'PP': '#007FFF',
+            'P.P.': '#007FFF',
+            'PRC': '#C2CE0C',
+            'P.R.C.': '#C2CE0C',
+            'PSM-EN,EU,EV,ER': '#FF9933', # Progressistes per les Illes Balears, 2004
+            'PSOE': '#FF0000',
+            'P.S.O.E.': '#FF0000',
+            'PSOE-PROGR.': '#FF0000',
+            'PODEMOS': '#5A205A',
+            'PODEMOS-En': '#5A205A',
+            'PODEMOS-EN MAREA-ANOVA-EU': '#5A205A',
+            'PODEMOS-EU-MAREAS EN COMÚN-EQUO': '#5A205A',
+            'PODEMOS-COM': '#5A205A',
+            'PODEMOS-COMPROMÍS-EUPV': '#5A205A',
+            'PODEMOS-EU': '#5A205A',
+            'PODEMOS-IU': '#5A205A',
+            'PODEMOS-IU-EQUO': '#5A205A',
+            'UPL': '#B41062', # Unión del Pueblo Leonés, 2000
+            'UPYD': '#E9008C',
+            'UPyD': '#E9008C',
+            'UV': '#1F4473', # Unió Valenciana, 2000
+            'VOX': '#63BE21',
+            '¡TERUEL EXISTE!': '#037252',
+        }
+
         self.superregion = {}
         for x in ['Almería', 'Cádiz', 'Córdoba', 'Granada', 'Huelva', 'Jaén', 'Málaga', 'Sevilla']:
             self.superregion[x] = 'Andalucía'
