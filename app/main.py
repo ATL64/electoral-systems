@@ -375,7 +375,7 @@ def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, thres
                                                 locations=locations,
                                                 z=seat_diff,
                                                 colorscale="Reds", # Options: Greys,YlGnBu,Greens,YlOrR d,Bluered,RdBu,Reds,Blues,Picnic,Rainbow,Portland,Jet,H ot,Blackbody,Earth,Electric,Viridis,Cividis.
-                                                zmin=0, zmax=max(seat_diff),
+                                                zmin=0, zmax=min(10, max(seat_diff)),
                                                 marker_line_width=0))
 
         seats_won = {k:v for k,v in metrics['seats_won'].items() if v != 0}

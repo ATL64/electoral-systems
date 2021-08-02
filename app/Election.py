@@ -178,6 +178,7 @@ class Spain_Election(Election):
         # See https://en.wikipedia.org/wiki/Category:Spain_political_party_colour_templates
         self.colors = {
             'AMAIUR': '#087178',
+            'ARALAR-ZUTIK': '#BD0000', # 2004
             'BNG': '#ADCFEF',
             'B.N.G.': '#ADCFEF',
             'NÓS': '#ADCFEF',
@@ -204,6 +205,7 @@ class Spain_Election(Election):
             'EN COMÚ': '#5A205A',
             'EQUO': '#8ABA18',
             'ERC': '#8ABA18',
+            'ERC-CATSÍ': '#FFB232',
             'ERC-CATSI': '#FFB232',
             'ERC-SOBIRANISTES': '#FFB232',
             'ESQUERRA': '#FFB232',
@@ -224,6 +226,7 @@ class Spain_Election(Election):
             'NC-CCN': '#BAF73E',
             'Nca': '#639E42',
             'PA': '#005931', # Partido Andalucista, 2004
+            'PAR': '#FFCC66', # Partido Aragonés, 2008
             'PACMA': '#ADBE18',
             'PP': '#007FFF',
             'P.P.': '#007FFF',

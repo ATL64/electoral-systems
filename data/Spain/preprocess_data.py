@@ -116,6 +116,14 @@ def preprocess_electoral_data(filename, date, df_cols, df_header, parties_cols, 
             region_name = 'Araba'
         elif region_name.startswith('Castellón'):
             region_name = 'Castelló'
+        elif 'Balears' in region_name:
+            region_name = 'Illes Balears'
+        elif 'Palmas' in region_name:
+            region_name = 'Las Palmas'
+        elif 'Coruña' in region_name:
+            region_name = 'A Coruña'
+        elif 'Rioja' in region_name:
+            region_name = 'La Rioja'
         else:
             region_name = region_name
         census = row['Total censo electoral']
