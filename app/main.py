@@ -12,7 +12,7 @@ import json
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-#from plotly.subplots import make_subplots
+from plotly.subplots import make_subplots
 
 # Custom modules
 import Election
@@ -274,7 +274,12 @@ content2 = html.Div([
     html.Br(),
     dbc.Row([
         dbc.Col(dcc.Graph(id='map'), width=7),
-        dbc.Col(dcc.Graph(id='chart'), width=5)
+        dbc.Col(dcc.Graph(id='chart'), width=5),
+    ]),
+    html.Br(),
+    dbc.Row([
+        dbc.Col(dcc.Graph(id='pie-1'), width=7),
+        dbc.Col(dcc.Graph(id='pie-2'), width=5),
     ]),
     ],
     style=CONTENT_STYLE
@@ -323,8 +328,10 @@ def set_default_election_values(elections, country):
     return system['name'], system['level'], system['threshold']*100, system['name'], system['level'], system['threshold']*100
 
 @app.callback([
-        Output("map", "figure"),
-        Output("chart", "figure"),
+        Output('map', 'figure'),
+        Output('chart', 'figure'),
+        Output('pie-1', 'figure'),
+        #Output('pie-2', 'figure'),
         Output('dropdown-system-2', 'disabled'),
         Output('dropdown-system-name-2', 'disabled'),
         Output('dropdown-region-level-2', 'disabled'),
@@ -381,6 +388,26 @@ def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, thres
         card_2_header = 'Seat Difference Percentage'
         card_2_title = "{:.2f}%".format(100 * (sum(seat_diff)  // 2) / regions[0][0].n_seats)
 
+        # Pie charts
+        final_results_1 = metrics['final_results_1']
+        final_results_2 = metrics['final_results_2']
+        labels = list(set(final_results_1.keys()).union(set(final_results_2.keys())))
+        # Create subplots: use 'domain' type for Pie subplot
+        pie = make_subplots(rows=1, cols=2, specs=[[{'type':'domain'}, {'type':'domain'}]])
+        pie.add_trace(go.Pie(labels=labels, values=[final_results_1[x] if x in final_results_1 else 0 for x in labels], name="System 1"),
+                      1, 1)
+        pie.add_trace(go.Pie(labels=labels, values=[final_results_2[x] if x in final_results_2 else 0 for x in labels], name="System 2"),
+                      1, 2)
+        # Use `hole` to create a donut-like pie chart
+        pie.update_traces(hole=.4, hoverinfo="label+percent+name", textinfo='value', textfont_size=20, textposition='inside')
+        pie.update_layout(
+            title_text="Final results",
+            uniformtext_minsize=12,
+            uniformtext_mode='hide',
+            # Add annotations in the center of the donut pies.
+            annotations=[dict(text='1', x=0.21, y=0.5, font_size=20, showarrow=False),
+                         dict(text='2', x=0.79, y=0.5, font_size=20, showarrow=False)]),
+
     else:
         disable = True
 
@@ -411,6 +438,8 @@ def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, thres
         card_2_header = 'Total Lost Votes'
         card_2_title = str(total_lost_votes)
 
+        pie = {}
+
 
     map_fig.update_layout(mapbox_style="light",
                           mapbox_accesstoken=MAPBOX_ACCESS_TOKEN,
@@ -418,7 +447,7 @@ def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, thres
                           mapbox_center = election.country.center(),
                           margin={"r":0,"t":0,"l":0,"b":0})
 
-    return map_fig, bar_fig, disable, disable, disable, disable, card_1_header, card_1_title, card_2_header, card_2_title
+    return map_fig, bar_fig, pie, disable, disable, disable, disable, card_1_header, card_1_title, card_2_header, card_2_title
 
 
 if __name__ == '__main__':

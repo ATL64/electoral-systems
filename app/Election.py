@@ -44,8 +44,15 @@ class Election(ABC):
     def get_compare_metrics(self, system_1, system_2):
         seat_diff = {}
         seats_won = Counter()
+        final_results_1 = Counter()
+        final_results_2 = Counter()
 
         regions = self.regions()
+
+        for region in regions[system_1['level']]:
+            final_results_1 += region.compute_election_result(system_1)
+        for region in regions[system_2['level']]:
+            final_results_2 += region.compute_election_result(system_2)
 
         if system_1['level']==system_2['level']:
             for region in regions[system_1['level']]:
@@ -137,7 +144,7 @@ class Election(ABC):
                     else:
                         seats_won[p] -= system_2_votes[p] - system_1_votes[p]
 
-        return {'seat_diff': seat_diff, 'seats_won': seats_won}
+        return {'seat_diff': seat_diff, 'seats_won': seats_won, 'final_results_1': final_results_1, 'final_results_2': final_results_2}
 
     def get_single_metrics(self, system_1):
         lost_votes = {}
