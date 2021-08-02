@@ -331,7 +331,6 @@ def set_default_election_values(elections, country):
         Output('map', 'figure'),
         Output('chart', 'figure'),
         Output('pie-1', 'figure'),
-        #Output('pie-2', 'figure'),
         Output('dropdown-system-2', 'disabled'),
         Output('dropdown-system-name-2', 'disabled'),
         Output('dropdown-region-level-2', 'disabled'),
@@ -380,7 +379,7 @@ def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, thres
                                                 marker_line_width=0))
 
         seats_won = {k:v for k,v in metrics['seats_won'].items() if v != 0}
-        #bar_fig = {'parties': [k for k in seats_won.keys()], 'seats_won': [v for v in seats_won.values()]}
+        seats_won = dict(sorted(seats_won.items(), key=lambda item: item[1], reverse=True))
         bar_colors = [election.colors[k] for k in seats_won.keys()]
         bar_fig = go.Figure(data=[go.Bar(
             x = [k for k in seats_won.keys()],
@@ -388,9 +387,6 @@ def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, thres
             marker_color = bar_colors,
         )])
         bar_fig.update_layout(title_text='Total Seats Won/Lost')
-
-        #bar_fig = px.bar(bar_fig, x='parties', y='seats_won')
-        #bar_fig.update_traces(marker_colors=bar_colors)
 
         card_1_header = 'Total Seat Difference'
         card_1_title = str(sum(seat_diff)  // 2) + '/' + str(regions[0][0].n_seats)
