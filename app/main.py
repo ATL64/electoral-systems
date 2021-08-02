@@ -55,29 +55,6 @@ CONTENT_STYLE = {
     "zIndex": 80
 }
 
-"""
-dropdown_countries = dcc.Dropdown(
-    id="dropdown-countries",
-    options=[
-        {'label': 'Spain', 'value': 'Spain'}
-    ],
-    value='Spain'
-)
-"""
-
-"""
-dropdown_countries = html.Div([
-    html.H6('Country',style={'display':'inline-block'}),
-    dcc.Dropdown(
-        id="dropdown-countries",
-        options=[
-            {'label': 'Spain', 'value': 'Spain'}
-        ],
-        value='Spain'
-    ),
-])
-"""
-
 dropdown_countries = html.Div([
     dbc.InputGroup([
         dbc.InputGroupAddon("Country"),
@@ -93,17 +70,6 @@ dropdown_countries = html.Div([
     )
 ])
 
-"""
-dropdown_elections = dcc.Dropdown(
-    id="dropdown-elections",
-    options=[
-        {'label': '2019-11-10', 'value': '2019-11-10'}
-    ],
-    value='2019-11-10'
-)
-"""
-
-
 dropdown_elections = html.Div([
     dbc.InputGroup([
         dbc.InputGroupAddon("Election"),
@@ -118,34 +84,6 @@ dropdown_elections = html.Div([
     ],
     )
 ])
-
-"""
-dropdown_elections = html.Div([
-    html.H6('Elections',style={'display':'inline-block'}),
-    dcc.Dropdown(
-        id="dropdown-elections",
-        options=[
-            {'label': '2019-11-10', 'value': '2019-11-10'}
-        ],
-        value='2019-11-10'
-    ),
-])
-"""
-
-"""
-dropdown_metrics = html.Div([
-    html.H6('Metrics',style={'display':'inline-block'}),
-    dcc.Dropdown(
-        id="dropdown-metrics",
-        options=[
-            {'label': 'Seat Difference Percentage', 'value': 'Seat Difference Percentage'},
-            {'label': 'Seat Difference', 'value': 'Seat Difference'},
-            {'label': 'Lost Votes Percentage', 'value': 'Lost Votes Percentage'},
-        ],
-        value='Seat Difference'
-    ),
-])
-"""
 
 dropdown_metrics = html.Div([
     dbc.InputGroup([
@@ -163,72 +101,6 @@ dropdown_metrics = html.Div([
     ],
     )
 ])
-
-
-"""
-compare_switch = dbc.Checklist(
-    options=[{"label": "Compare", "value": 1}],
-    value=[1],
-    id="switch-compare",
-    switch=True
-)
-
-dropdown_system_1 = dcc.Dropdown(
-    id="dropdown-system-1",
-    options=[
-        {'label': "d'Hondt", 'value': 'dHondt'},
-        {'label': "Sainte-Laguë", 'value': 'SL'},
-    ],
-    value='dHondt'
-)
-
-dropdown_system_2 = dcc.Dropdown(
-    id="dropdown-system-2",
-    options=[
-        {'label': "d'Hondt", 'value': 'dHondt'},
-        {'label': "Sainte-Laguë", 'value': 'SL'},
-    ],
-    value='SL'
-)
-"""
-
-"""
-dropdown_region_level_1 = dcc.Dropdown(
-    id="dropdown-region-level-1",
-    options=[
-        {'label': '0', 'value': '0'},
-        {'label': '1', 'value': '1'},
-        {'label': '2', 'value': '2'},
-    ],
-    value='2'
-)
-
-dropdown_region_level_2 = dcc.Dropdown(
-    id="dropdown-region-level-2",
-    options=[
-        {'label': '0', 'value': '0'},
-        {'label': '1', 'value': '1'},
-        {'label': '2', 'value': '2'},
-    ],
-    value='2'
-)
-"""
-
-"""
-threshold_1 = dcc.Input(
-    id="threshold-1",
-    type="number",
-    min=0, max=15, step=1,
-    value=3
-)
-
-threshold_2 = dcc.Input(
-    id="threshold-2",
-    type="number",
-    min=0, max=15, step=1,
-    value=3
-)
-"""
 
 system_1_card = dbc.Card(
     [
@@ -408,46 +280,6 @@ content2 = html.Div([
     style=CONTENT_STYLE
 )
 
-"""
-content = html.Div([
-        dbc.Row([
-            dbc.Col(dropdown_countries, width=2),
-            dbc.Col(dropdown_elections, width=2),
-            dbc.Col(compare_switch, width=8),
-        ]),
-        dbc.Row([
-            dbc.Col(html.P(), width=4),
-            dbc.Col(dropdown_system_1, width=2),
-            dbc.Col(dropdown_system_2, width=2),
-        ]),
-        dbc.Row([
-            dbc.Col(html.P(), width=4),
-            dbc.Col(dropdown_region_level_1, width=2),
-            dbc.Col(dropdown_region_level_2, width=2),
-        ]),
-        dbc.Row([
-            dbc.Col(html.P(), width=4),
-            dbc.Col(threshold_1, width=2),
-            dbc.Col(threshold_2, width=2),
-        ]),
-        html.Br(),
-        dbc.Row([
-            dbc.Col(html.P(), width=1),
-            dbc.Col(info_box_1, width=4),
-            dbc.Col(html.P(), width=2),
-            dbc.Col(info_box_2, width=4),
-            dbc.Col(html.P(), width=1),
-        ]),
-        html.Br(),
-        dbc.Row([
-            dbc.Col(dcc.Graph(id='map'), width=7),
-            dbc.Col(dcc.Graph(id='chart'), width=5)
-        ]),
-    ],
-    style=CONTENT_STYLE
-)
-"""
-
 
 app.layout = html.Div([
     content2
@@ -532,7 +364,6 @@ def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, thres
         s2 = {'name': system_2, 'threshold': threshold_2, 'level': level_2}
         metrics = election.get_compare_metrics(s1, s2)
 
-        #print(metrics['seat_diff'])
         seat_diff = list(metrics['seat_diff'].values())
         map_fig = go.Figure(go.Choroplethmapbox(geojson=election.country.regions()[level]['geojson'],
                                                 locations=locations,

@@ -90,7 +90,6 @@ class Election(ABC):
                     seats_won[p] += system_1_votes[p] - system_2_votes[p]
                 else:
                     seats_won[p] -= system_2_votes[p] - system_1_votes[p]
-            print(seat_diff, seats_won)
 
         elif system_1['level']==1:
             system_2_region_votes = defaultdict(Counter)
