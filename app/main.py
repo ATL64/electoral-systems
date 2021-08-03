@@ -91,8 +91,9 @@ dropdown_metrics = html.Div([
         dcc.Dropdown(
             id="dropdown-metrics",
             options=[
-                {'label': 'Seat Difference Percentage', 'value': 'Seat Difference Percentage'},
+                #{'label': 'Seat Difference Percentage', 'value': 'Seat Difference Percentage'},
                 {'label': 'Seat Difference', 'value': 'Seat Difference'},
+                {'label': 'Avg. Seat Cost', 'value': 'Avg. Seat Cost'},
                 {'label': 'Lost Votes Percentage', 'value': 'Lost Votes Percentage'},
             ],
             value='Seat Difference',
@@ -126,9 +127,15 @@ system_1_card = dbc.Card(
                 dbc.Col(
                     dcc.Dropdown(
                         id="dropdown-system-name-1",
+                        # TODO Droop LR, Imperali LR, Imperiali HA, Hagenbach-Bischoff
                         options=[
                             {'label': "d'Hondt", 'value': 'dHondt'},
-                            {'label': "Sainte-Laguë", 'value': 'SL'},
+                            {'label': "Sainte-Laguë", 'value': 'SL'}, # https://en.wikipedia.org/wiki/Webster/Sainte-Lagu%C3%AB_method
+                            {'label': "Modified Sainte-Laguë", 'value': 'MSL'}, # https://en.wikipedia.org/wiki/Webster/Sainte-Lagu%C3%AB_method
+                            {'label': "LRM (Hare Quota)", 'value': 'LRM-Hare'}, # https://en.wikipedia.org/wiki/Largest_remainder_method
+                            {'label': "LRM (Droop Quota)", 'value': 'LRM-Droop'},
+                            {'label': "LRM (Hagenbach-Bischoff Quota)", 'value': 'LRM-HB'},
+                            {'label': "LRM (Imperiali Quota)", 'value': 'LRM-Imperiali'},
                         ],
                         value='dHondt'
                     ),
@@ -188,7 +195,12 @@ system_2_card = dbc.Card(
                         id="dropdown-system-name-2",
                         options=[
                             {'label': "d'Hondt", 'value': 'dHondt'},
-                            {'label': "Sainte-Laguë", 'value': 'SL'},
+                            {'label': "Sainte-Laguë", 'value': 'SL'}, # https://en.wikipedia.org/wiki/Webster/Sainte-Lagu%C3%AB_method
+                            {'label': "Modified Sainte-Laguë", 'value': 'MSL'}, # https://en.wikipedia.org/wiki/Webster/Sainte-Lagu%C3%AB_method
+                            {'label': "LRM (Hare Quota)", 'value': 'LRM-Hare'}, # https://en.wikipedia.org/wiki/Largest_remainder_method
+                            {'label': "LRM (Droop Quota)", 'value': 'LRM-Droop'},
+                            {'label': "LRM (Hagenbach-Bischoff Quota)", 'value': 'LRM-HB'},
+                            {'label': "LRM (Imperiali Quota)", 'value': 'LRM-Imperiali'},
                         ],
                         value='dHondt'
                     ),
@@ -297,35 +309,59 @@ print("Everything is loaded!")
 #######################
 
 # Make this callback on the client side?
-@app.callback(Output('dropdown-elections', 'options'),
+@app.callback([Output('dropdown-elections', 'options'),
+               Output('dropdown-elections', 'value')],
               Input('dropdown-countries', 'value'))
 def update_dropdown_elections(country):
-    options=[
-        {'label': '2019-11-10', 'value': '2019-11-10'},
-        {'label': '2019-04-28', 'value': '2019-04-28'},
-        {'label': '2016-06-26', 'value': '2016-06-26'},
-        {'label': '2015-12-20', 'value': '2015-12-20'},
-        {'label': '2011-11-20', 'value': '2011-11-20'},
-        {'label': '2008-03-09', 'value': '2008-03-09'},
-        {'label': '2004-03-14', 'value': '2004-03-14'},
-        {'label': '2000-03-12', 'value': '2000-03-12'},
-    ]
-    return options
+    if country=='Spain':
+        options=[
+            {'label': '2019-11-10', 'value': '2019-11-10'},
+            {'label': '2019-04-28', 'value': '2019-04-28'},
+            {'label': '2016-06-26', 'value': '2016-06-26'},
+            {'label': '2015-12-20', 'value': '2015-12-20'},
+            {'label': '2011-11-20', 'value': '2011-11-20'},
+            {'label': '2008-03-09', 'value': '2008-03-09'},
+            {'label': '2004-03-14', 'value': '2004-03-14'},
+            {'label': '2000-03-12', 'value': '2000-03-12'},
+        ]
+        value = '2019-11-10'
+    return options, value
 
 @app.callback([
-        Output('dropdown-system-1', 'value'),
+        Output('dropdown-system-name-1', 'value'),
         Output('dropdown-region-level-1', 'value'),
         Output('threshold-1', 'value'),
-        Output('dropdown-system-2', 'value'),
+    ],
+    Input('dropdown-system-1', 'value'),
+    [
+        State('dropdown-system-name-1', 'value'),
+        State('dropdown-region-level-1', 'value'),
+        State('threshold-1', 'value'),
+    ])
+def set_system_1(system_1, s1_name, s1_level, s1_threshold):
+    if system_1=='Spain':
+        s1_name = 'dHondt'
+        s1_level = 2
+        s1_threshold = 3
+    return s1_name, s1_level, s1_threshold
+
+@app.callback([
+        Output('dropdown-system-name-2', 'value'),
         Output('dropdown-region-level-2', 'value'),
         Output('threshold-2', 'value'),
     ],
-    Input('dropdown-elections', 'value'),
-    State('dropdown-countries', 'value'))
-def set_default_election_values(elections, country):
-    election = ELECTIONS[country][elections]
-    system = election.electoral_system()
-    return system['name'], system['level'], system['threshold']*100, system['name'], system['level'], system['threshold']*100
+    Input('dropdown-system-2', 'value'),
+    [
+        State('dropdown-system-name-2', 'value'),
+        State('dropdown-region-level-2', 'value'),
+        State('threshold-2', 'value'),
+    ])
+def set_system_2(system_2, s2_name, s2_level, s2_threshold):
+    if system_2=='Spain':
+        s2_name = 'dHondt'
+        s2_level = 2
+        s2_threshold = 3
+    return s2_name, s2_level, s2_threshold
 
 @app.callback([
         Output('map', 'figure'),
@@ -348,12 +384,12 @@ def set_default_election_values(elections, country):
         Input('dropdown-system-name-2', 'value'),
         Input('dropdown-region-level-2', 'value'),
         Input('threshold-2', 'value'),
+        Input('dropdown-elections', 'value'),
     ],
     [
         State('dropdown-countries', 'value'),
-        State('dropdown-elections', 'value'),
     ])
-def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, threshold_2, country, elections):
+def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, threshold_2, elections, country):
 
     election = ELECTIONS[country][elections]
 
@@ -374,9 +410,11 @@ def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, thres
         map_fig = go.Figure(go.Choroplethmapbox(geojson=election.country.regions()[level]['geojson'],
                                                 locations=locations,
                                                 z=seat_diff,
+                                                #colorbar={'title': metric},
                                                 colorscale="Reds", # Options: Greys,YlGnBu,Greens,YlOrR d,Bluered,RdBu,Reds,Blues,Picnic,Rainbow,Portland,Jet,H ot,Blackbody,Earth,Electric,Viridis,Cividis.
                                                 zmin=0, zmax=max(10, max(seat_diff)),
                                                 marker_line_width=0))
+        #map_fig.update_layout(title=metric)
 
         seats_won = {k:v for k,v in metrics['seats_won'].items() if v != 0}
         seats_won = dict(sorted(seats_won.items(), key=lambda item: item[1], reverse=True))
@@ -386,10 +424,15 @@ def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, thres
             y = [v for v in seats_won.values()],
             marker_color = bar_colors,
         )])
-        bar_fig.update_layout(title_text='Total Seats Won/Lost')
+        bar_fig.update_layout(
+            title_text='Total Seats Won/Lost',
+            yaxis=dict(
+                title='Seats Sys 1 - Seats Sys 2',
+                titlefont_size=16,
+                tickfont_size=14,
+            ),
+        )
 
-        print(seat_diff)
-        print(sum(seat_diff))
         card_1_header = 'Total Seat Difference'
         card_1_title = str(sum(seat_diff)) + '/' + str(regions[0][0].n_seats)
         card_2_header = 'Seat Difference Percentage'
@@ -438,8 +481,21 @@ def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, thres
         party_lost_votes = metrics['party_lost_votes']
         total_lost_votes = sum(party_lost_votes.values())
         party_lost_votes = party_lost_votes.most_common(10)
-        bar_fig = {'parties': [x[0] for x in party_lost_votes], 'lost_votes': [x[1] for x in party_lost_votes]}
-        bar_fig = px.bar(bar_fig, x='parties', y='lost_votes')
+        bar_colors = [election.colors[x[0]] if x[0] in election.colors else '#7D7D7D' for x in party_lost_votes]
+        bar_fig = go.Figure(data=[go.Bar(
+            x = [x[0] for x in party_lost_votes],
+            y = [x[1] for x in party_lost_votes],
+            marker_color = bar_colors,
+        )])
+        bar_fig.update_layout(
+            title_text='Lost votes per party',
+            yaxis=dict(
+                title='Lost Votes',
+                titlefont_size=16,
+                tickfont_size=14,
+            ),
+        )
+
 
         total_votes = sum(regions[0][0].votes.values())
 
@@ -449,6 +505,22 @@ def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, thres
         card_2_title = str(total_lost_votes)
 
         pie = {}
+        # Pie charts
+        final_results_1 = metrics['final_results']
+        labels = list(final_results_1.keys())
+        colors = [election.colors[x] for x in labels]
+        # Create subplots: use 'domain' type for Pie subplot
+        pie = make_subplots(rows=1, cols=1, specs=[[{'type':'domain'}]])
+        pie.add_trace(go.Pie(labels=labels, values=[final_results_1[x] if x in final_results_1 else 0 for x in labels],
+                             name="System 1", marker_colors=colors),
+                      1, 1)
+        # Use `hole` to create a donut-like pie chart
+        pie.update_traces(hole=.4, hoverinfo="label+percent+name", textinfo='value', textfont_size=20, textposition='inside')
+        pie.update_layout(
+            title_text="Final results",
+            uniformtext_minsize=12,
+            uniformtext_mode='hide',
+        ),
 
 
     map_fig.update_layout(mapbox_style="light",

@@ -150,8 +150,13 @@ class Election(ABC):
         lost_votes = {}
         lost_votes_percentage = {}
         party_lost_votes = Counter()
+        final_results = Counter()
 
         regions = self.regions()
+
+        for region in regions[system_1['level']]:
+            final_results += region.compute_election_result(system_1)
+
         for region in regions[system_1['level']]:
             system_votes = region.compute_election_result(system_1)
             parties = set(system_votes)
@@ -163,7 +168,7 @@ class Election(ABC):
                     party_lost_votes[p] += region.votes[p]
             lost_votes_percentage[region.name] = lost_votes[region.name] / sum(region.votes.values())
 
-        return {'lost_votes_percentage': lost_votes_percentage, 'party_lost_votes': party_lost_votes}
+        return {'lost_votes_percentage': lost_votes_percentage, 'party_lost_votes': party_lost_votes, 'final_results': final_results}
 
 
 class Spain_Election(Election):
