@@ -44,21 +44,20 @@ class Election(ABC):
     def get_compare_metrics(self, system_1, system_2):
         seat_diff = {}
         seats_won = Counter()
-        final_results_1 = Counter()
-        final_results_2 = Counter()
+
 
         regions = self.regions()
 
-        for region in regions[system_1['level']]:
-            final_results_1 += region.compute_election_result(system_1)
-        for region in regions[system_2['level']]:
-            final_results_2 += region.compute_election_result(system_2)
+        results_1 = {}
+        results_2 = {}
 
         if system_1['level']==system_2['level']:
             for region in regions[system_1['level']]:
+                results_1[region.name] = region.compute_election_result(system_1)
+                results_2[region.name] = region.compute_election_result(system_2)
                 seat_diff[region.name] = 0
-                system_1_votes = region.compute_election_result(system_1)
-                system_2_votes = region.compute_election_result(system_2)
+                system_1_votes = results_1[region.name]
+                system_2_votes = results_2[region.name]
                 parties = set(system_1_votes.keys()).union(system_2_votes.keys())
                 for p in parties:
                     if p in system_1_votes and p not in system_2_votes:
@@ -85,6 +84,9 @@ class Election(ABC):
                 for region in regions[system_1['level']]:
                     system_1_votes += region.compute_election_result(system_1)
 
+            results_1['Spain'] = system_1_votes
+            results_2['Spain'] = system_2_votes
+
             parties = set(system_1_votes.keys()).union(system_2_votes.keys())
             for p in parties:
                 if p in system_1_votes and p not in system_2_votes:
@@ -104,9 +106,12 @@ class Election(ABC):
                 votes = region.compute_election_result(system_2)
                 system_2_region_votes[self.superregion[region.name]] += votes
 
+            results_2 = system_2_region_votes
+
             for region in regions[system_1['level']]:
+                results_1[region.name] = region.compute_election_result(system_1)
                 seat_diff[region.name] = 0
-                system_1_votes = region.compute_election_result(system_1)
+                system_1_votes = results_1[region.name]
                 system_2_votes = system_2_region_votes[region.name]
                 parties = set(system_1_votes.keys()).union(system_2_votes.keys())
                 for p in parties:
@@ -127,9 +132,12 @@ class Election(ABC):
                 votes = region.compute_election_result(system_1)
                 system_1_region_votes[self.superregion[region.name]] += votes
 
+            results_1 = system_1_region_votes
+
             for region in regions[system_2['level']]:
+                results_2[region.name] = region.compute_election_result(system_2)
                 seat_diff[region.name] = 0
-                system_2_votes = region.compute_election_result(system_2)
+                system_2_votes = results_2[region.name]
                 system_1_votes = system_1_region_votes[region.name]
                 parties = set(system_1_votes.keys()).union(system_2_votes.keys())
                 for p in parties:
@@ -144,7 +152,7 @@ class Election(ABC):
                     else:
                         seats_won[p] -= system_2_votes[p] - system_1_votes[p]
 
-        return {'seat_diff': seat_diff, 'seats_won': seats_won, 'final_results_1': final_results_1, 'final_results_2': final_results_2}
+        return {'seat_diff': seat_diff, 'seats_won': seats_won, 'results_1': results_1, 'results_2': results_2}
 
     def get_single_metrics(self, system_1):
         lost_votes = {}

@@ -9,6 +9,7 @@ import dash_html_components as html
 import dash_table
 import geopandas as gpd
 import json
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -406,15 +407,47 @@ def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, thres
         s2 = {'name': system_2, 'threshold': threshold_2, 'level': level_2}
         metrics = election.get_compare_metrics(s1, s2)
 
+        final_results_1 = Counter()
+        final_results_2 = Counter()
+        for region in regions[level]:
+            final_results_1 += metrics['results_1'][region.name]
+        for region in regions[level]:
+            final_results_2 += metrics['results_2'][region.name]
+
+        hover_strings = []
+        for r in locations:
+            hover_string = f"{sum(metrics['results_1'][r].values())} seats <br><br>"
+            region_parties = [key for key,value in sorted(metrics['results_1'][r].items(), key=lambda x : x[1], reverse=True)]
+            for k in metrics['results_2'][r]:
+                if k not in metrics['results_1'][r]:
+                    region_parties.append(k)
+            #region_parties = list(set(metrics['results_1'][r].keys()).union(set(metrics['results_2'][r].keys())))
+            for p in region_parties:
+                hover_string += f"{p} \t"
+                if p in metrics['results_1'][r]:
+                    hover_string += f"{metrics['results_1'][r][p]} \t"
+                else:
+                    hover_string += "0 \t"
+                if p in metrics['results_2'][r]:
+                    hover_string += f"{metrics['results_2'][r][p]} <br>"
+                else:
+                    hover_string += "0 <br>"
+            hover_string += f"<extra>{r}</extra>"
+            hover_strings.append(hover_string)
+
         seat_diff = list(metrics['seat_diff'].values())
-        map_fig = go.Figure(go.Choroplethmapbox(geojson=election.country.regions()[level]['geojson'],
-                                                locations=locations,
-                                                z=seat_diff,
-                                                #colorbar={'title': metric},
-                                                colorscale="Reds", # Options: Greys,YlGnBu,Greens,YlOrR d,Bluered,RdBu,Reds,Blues,Picnic,Rainbow,Portland,Jet,H ot,Blackbody,Earth,Electric,Viridis,Cividis.
-                                                zmin=0, zmax=max(10, max(seat_diff)),
-                                                marker_line_width=0))
-        #map_fig.update_layout(title=metric)
+
+        map_fig = go.Figure(go.Choroplethmapbox(
+            geojson=election.country.regions()[level]['geojson'],
+            locations=locations,
+            z=seat_diff,
+            colorscale="Reds", # Options: Greys,YlGnBu,Greens,YlOrR d,Bluered,RdBu,Reds,Blues,Picnic,Rainbow,Portland,Jet,H ot,Blackbody,Earth,Electric,Viridis,Cividis.
+            zmin=0, zmax=max(10, max(seat_diff)),
+            marker_line_width=0,
+            customdata = hover_strings,
+            hovertemplate = '%{customdata}'
+            )
+        )
 
         seats_won = {k:v for k,v in metrics['seats_won'].items() if v != 0}
         seats_won = dict(sorted(seats_won.items(), key=lambda item: item[1], reverse=True))
@@ -439,8 +472,6 @@ def update_maps(metric, system_1, level_1, threshold_1, system_2, level_2, thres
         card_2_title = "{:.2f}%".format(100 * (sum(seat_diff)) / regions[0][0].n_seats)
 
         # Pie charts
-        final_results_1 = metrics['final_results_1']
-        final_results_2 = metrics['final_results_2']
         labels = list(set(final_results_1.keys()).union(set(final_results_2.keys())))
         colors = [election.colors[x] for x in labels]
         # Create subplots: use 'domain' type for Pie subplot
