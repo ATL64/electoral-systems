@@ -17,19 +17,22 @@ class Electoral_Region(Region):
         self.census = census
         self.n_seats = n_seats
         self.votes = votes
-        self.nota = nota # None Of The Above
+        self.nota = nota # None Of The Above (https://en.wikipedia.org/wiki/None_of_the_above)
         self.spoilt_votes = spoilt_votes
         self.total_votes = sum(votes.values())
         return
 
-    def compute_election_result(self, system):
-        vote_threshold = self.total_votes*system['threshold']/100
-        valid_votes = {k:v for k,v in self.votes.items() if v>vote_threshold}
+    def compute_election_result(self, system, valid_parties=None):
+        if valid_parties:
+            valid_votes = {p:v for p,v in self.votes.items() if p in valid_parties}
+        else:
+            vote_threshold = self.total_votes*system['threshold']/100
+            valid_votes = {k:v for k,v in self.votes.items() if v>vote_threshold}
         round_votes = copy.deepcopy(valid_votes)
         seat_counter = Counter()
         n_seats = copy.deepcopy(self.n_seats)
 
-        if 'LRM' in system['name']: # Largest Remainder Method (Hare Quota right now. Droop and Hagenbach-Bischoff to be implemented)
+        if 'LRM' in system['name']: # Largest Remainder Method
             if 'Hare' in system['name']:
                 seat_cost = sum(valid_votes.values()) / n_seats
             elif 'Droop' in system['name']:

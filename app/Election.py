@@ -45,16 +45,24 @@ class Election(ABC):
         seat_diff = {}
         seats_won = Counter()
 
-
         regions = self.regions()
+
+        if system_1['threshold_country']:
+            valid_parties_1 = self.get_valid_parties(system_1['threshold'])
+        else:
+            valid_parties_1 = None
+        if system_2['threshold_country']:
+            valid_parties_2 = self.get_valid_parties(system_2['threshold'])
+        else:
+            valid_parties_2 = None
 
         results_1 = {}
         results_2 = {}
 
         if system_1['level']==system_2['level']:
             for region in regions[system_1['level']]:
-                results_1[region.name] = region.compute_election_result(system_1)
-                results_2[region.name] = region.compute_election_result(system_2)
+                results_1[region.name] = region.compute_election_result(system_1, valid_parties_1)
+                results_2[region.name] = region.compute_election_result(system_2, valid_parties_2)
                 seat_diff[region.name] = 0
                 system_1_votes = results_1[region.name]
                 system_2_votes = results_2[region.name]
@@ -74,15 +82,15 @@ class Election(ABC):
         elif system_1['level']==0 or system_2['level']==0:
             seat_diff[self.country.name] = 0
             if system_1['level']==0:
-                system_1_votes = regions[0][0].compute_election_result(system_1)
+                system_1_votes = regions[0][0].compute_election_result(system_1,valid_parties_1)
                 system_2_votes = Counter()
                 for region in regions[system_2['level']]:
-                    system_2_votes += region.compute_election_result(system_2)
+                    system_2_votes += region.compute_election_result(system_2, valid_parties_2)
             else:
-                system_2_votes = regions[0][0].compute_election_result(system_2)
+                system_2_votes = regions[0][0].compute_election_result(system_2, valid_parties_2)
                 system_1_votes = Counter()
                 for region in regions[system_1['level']]:
-                    system_1_votes += region.compute_election_result(system_1)
+                    system_1_votes += region.compute_election_result(system_1, valid_parties_1)
 
             results_1['Spain'] = system_1_votes
             results_2['Spain'] = system_2_votes
@@ -103,13 +111,13 @@ class Election(ABC):
         elif system_1['level']==1:
             system_2_region_votes = defaultdict(Counter)
             for region in regions[system_2['level']]:
-                votes = region.compute_election_result(system_2)
+                votes = region.compute_election_result(system_2, valid_parties_2)
                 system_2_region_votes[self.superregion[region.name]] += votes
 
             results_2 = system_2_region_votes
 
             for region in regions[system_1['level']]:
-                results_1[region.name] = region.compute_election_result(system_1)
+                results_1[region.name] = region.compute_election_result(system_1, valid_parties_1)
                 seat_diff[region.name] = 0
                 system_1_votes = results_1[region.name]
                 system_2_votes = system_2_region_votes[region.name]
@@ -129,13 +137,13 @@ class Election(ABC):
         elif system_2['level']==1:
             system_1_region_votes = defaultdict(Counter)
             for region in regions[system_1['level']]:
-                votes = region.compute_election_result(system_1)
+                votes = region.compute_election_result(system_1, valid_parties_1)
                 system_1_region_votes[self.superregion[region.name]] += votes
 
             results_1 = system_1_region_votes
 
             for region in regions[system_2['level']]:
-                results_2[region.name] = region.compute_election_result(system_2)
+                results_2[region.name] = region.compute_election_result(system_2, valid_parties_2)
                 seat_diff[region.name] = 0
                 system_2_votes = results_2[region.name]
                 system_1_votes = system_1_region_votes[region.name]
@@ -160,13 +168,18 @@ class Election(ABC):
         party_lost_votes = Counter()
         final_results = Counter()
 
+        if system_1['threshold_country']:
+            valid_parties = self.get_valid_parties(system_1['threshold'])
+        else:
+            valid_parties = None
+
         regions = self.regions()
 
         for region in regions[system_1['level']]:
-            final_results += region.compute_election_result(system_1)
+            final_results += region.compute_election_result(system_1, valid_parties)
 
         for region in regions[system_1['level']]:
-            system_votes = region.compute_election_result(system_1)
+            system_votes = region.compute_election_result(system_1, valid_parties)
             parties = set(system_votes)
             # Compute lost votes
             lost_votes[region.name] = 0
@@ -177,6 +190,18 @@ class Election(ABC):
             lost_votes_percentage[region.name] = lost_votes[region.name] / sum(region.votes.values())
 
         return {'lost_votes_percentage': lost_votes_percentage, 'party_lost_votes': party_lost_votes, 'final_results': final_results}
+
+    def get_valid_parties(self, threshold):
+        """
+        For a particular election, given a national-level threshold, return
+        a list of parties that have a number of votes above that threshold.
+        """
+        total_votes = sum(self._regions[0][0].votes.values())
+        vote_threshold = total_votes * threshold / 100
+
+        parties = [p for p,v in self._regions[0][0].votes.items() if v>=vote_threshold]
+
+        return parties
 
 
 class Spain_Election(Election):
@@ -365,7 +390,7 @@ class Spain_Election(Election):
         return self._parties
 
     def electoral_system(self):
-        return {'name': 'dHondt', 'threshold': 0.03, 'level': 2}
+        return {'name': 'dHondt', 'threshold': 3, 'level': 2}
 
 class Spain_2019_11(Spain_Election):
     def __init__(self):
@@ -376,7 +401,6 @@ class Spain_2019_04(Spain_Election):
     def __init__(self):
         super(Spain_2019_04, self).__init__(data_file='data/Spain/election_data_2019-04-28.pkl')
         return
-
 
 class Spain_2016_06(Spain_Election):
     def __init__(self):
