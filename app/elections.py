@@ -441,6 +441,7 @@ class Spain_2000_03(Spain_Election):
         super(Spain_2000_03, self).__init__(data_file=filename)
         return
 
+
 #######
 # USA #
 #######
@@ -455,6 +456,7 @@ usa_colors = {
     'Green': '#17AA5C',
     'Constitution': '#A356DE',
 }
+
 
 class USA_2020(Election):
     def __init__(self):

@@ -146,7 +146,7 @@ class Electoral_Region():
                     round_votes[best_party] = valid_votes[best_party] / (2*seat_counter[best_party] + 1)
                 n_seats -= 1
 
-        seat_counter = {k: v for k, v in seat_counter.items() if v!=0}
+        seat_counter = {k: v for k, v in seat_counter.items() if v != 0}
         return seat_counter
 
     def compute_result(self, system):

@@ -120,6 +120,7 @@ class Spain(Country):
             2: level_2,
         }
 
+
 class USA(Country):
     """
     Class representing the United States of America.
