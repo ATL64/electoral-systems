@@ -1,24 +1,13 @@
-from collections import Counter
-import dash
-from dash.dependencies import Input, Output, State, ALL
-import dash_auth
+from dash import Dash, html, dcc, no_update, Input, Output, State
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
 from dash_daq import BooleanSwitch
-from dash_extensions.javascript import arrow_function
-import dash_html_components as html
-import dash_table
-import geopandas as gpd
-import json
-import numpy as np
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 # Custom modules
-import Election
+import countries
+import elections
+import electoral_systems
 
+# Read the markdown files
 with open('texts/about.md', 'r') as file:
     about_md = file.read()
 with open('texts/country_election_metric.md', 'r') as file:
@@ -29,47 +18,33 @@ with open('texts/electoral_systems.md', 'r') as file:
 # initialize all the elections so that all the data loading is done when starting the app
 ELECTIONS = {
     'Spain': {
-        '2019-11-10': Election.Spain_2019_11(),
-        '2019-04-28': Election.Spain_2019_04(),
-        '2016-06-26': Election.Spain_2016_06(),
-        '2015-12-20': Election.Spain_2015_12(),
-        '2011-11-20': Election.Spain_2011_11(),
-        '2008-03-09': Election.Spain_2008_03(),
-        '2004-03-14': Election.Spain_2004_03(),
-        '2000-03-12': Election.Spain_2000_03(),
+        '2019-11-10': elections.Spain_2019_11(),
+        '2019-04-28': elections.Spain_2019_04(),
+        '2016-06-26': elections.Spain_2016_06(),
+        '2015-12-20': elections.Spain_2015_12(),
+        '2011-11-20': elections.Spain_2011_11(),
+        '2008-03-09': elections.Spain_2008_03(),
+        '2004-03-14': elections.Spain_2004_03(),
+        '2000-03-12': elections.Spain_2000_03(),
+    },
+    'USA': {
+        '2020': elections.USA_2020()
     }
 }
 
 # Initialize the app
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUMEN])
-
-MAPBOX_ACCESS_TOKEN = "pk.eyJ1IjoiYWRlbWlxdWVsIiwiYSI6ImNrcmFiMWxpdTRoZm0ydm1mb3FieHBueHIifQ.8Vz0HX4TMOQN1ywDSEPtSw"
-MAPBOX_STYLE = "mapbox://styles/plotlymapbox/cjvprkf3t1kns1cqjxuxmwixz"
+app = Dash(__name__, external_stylesheets=[dbc.themes.LUMEN])
+server = app.server  # Necessary for deployment on DigitalOcean
 
 ##############
-### LAYOUT ###
+#   LAYOUT   #
 ##############
 
-CONTENT_STYLE = {
-    "position": "relative",
-    "top": 40,
-    "bottom": 0,
-    "left": 0,
-    "right": 0,
-    "margin-top": 25,
-    "margin-left": "5rem",
-    "margin-right": "5rem",
-    "margin-bottom": 100,
-    "zIndex": 80
-}
-
-system_unselected_color = '#F4CCCC'
+# STUFF THAT GOES IN THE SIDEBAR
 
 dropdown_countries = dcc.Dropdown(
     id="dropdown-countries",
-    options=[
-        {'label': 'Spain', 'value': 'Spain'}
-    ],
+    options=[{'label': country, 'value': country} for country in countries.COUNTRY_LIST],
     value='Spain',
     placeholder='Country',
     style={'font-size': '20px'},
@@ -91,7 +66,6 @@ dropdown_metrics = dcc.Dropdown(
     id="dropdown-metrics",
     options=[
         {'label': 'Seat Difference', 'value': 'Seat Difference'},
-        #{'label': 'Avg. Seat Cost', 'value': 'Avg. Seat Cost'},
         {'label': 'Lost Votes', 'value': 'Lost Votes'},
     ],
     value='Seat Difference',
@@ -100,11 +74,12 @@ dropdown_metrics = dcc.Dropdown(
     clearable=False,
 )
 
-## BUTTONS
+# BUTTONS
 about_button = html.Div(
     [
         dbc.Button("About", id="about-button", n_clicks=0, size='lg', color='primary'),
-        dbc.Modal([dbc.ModalBody(dcc.Markdown(about_md))],
+        dbc.Modal(
+            [dbc.ModalBody(dcc.Markdown(about_md))],
             id="about-modal",
             is_open=False,
             size='lg',
@@ -118,7 +93,8 @@ about_button = html.Div(
 countries_button = html.Div(
     [
         dbc.Button("?", id="countries-button", n_clicks=0, color='primary'),
-        dbc.Modal([dbc.ModalBody(dcc.Markdown(country_md))],
+        dbc.Modal(
+            [dbc.ModalBody(dcc.Markdown(country_md))],
             id="countries-modal",
             is_open=False,
             size='lg',
@@ -132,7 +108,8 @@ countries_button = html.Div(
 systems_button = html.Div(
     [
         dbc.Button("?", id="systems-button", n_clicks=0, color='primary'),
-        dbc.Modal([dbc.ModalBody(dcc.Markdown(systems_md))],
+        dbc.Modal(
+            [dbc.ModalBody(dcc.Markdown(systems_md))],
             id="systems-modal",
             is_open=False,
             size='lg',
@@ -145,12 +122,10 @@ systems_button = html.Div(
 
 system_1_dropdown = dcc.Dropdown(
     id="dropdown-system-name-1",
-    # TODO Droop LR, Imperali LR, Imperiali HA, Hagenbach-Bischoff
     options=[
         {'label': "d'Hondt", 'value': 'dHondt'},
-        {'label': "Sainte-Laguë", 'value': 'SL'}, # https://en.wikipedia.org/wiki/Webster/Sainte-Lagu%C3%AB_method
-        #{'label': "Modified Sainte-Laguë", 'value': 'MSL'}, # https://en.wikipedia.org/wiki/Webster/Sainte-Lagu%C3%AB_method
-        {'label': "LRM (Hare Quota)", 'value': 'LRM-Hare'}, # https://en.wikipedia.org/wiki/Largest_remainder_method
+        {'label': "Sainte-Laguë", 'value': 'SL'},  # https://en.wikipedia.org/wiki/Webster/Sainte-Lagu%C3%AB_method
+        {'label': "LRM (Hare Quota)", 'value': 'LRM-Hare'},  # https://en.wikipedia.org/wiki/Largest_remainder_method
         {'label': "LRM (Droop Quota)", 'value': 'LRM-Droop'},
         {'label': "LRM (Hagenbach-Bischoff Quota)", 'value': 'LRM-HB'},
         {'label': "LRM (Imperiali Quota)", 'value': 'LRM-Imperiali'},
@@ -210,12 +185,10 @@ system_1_group = html.Div([
 
 system_2_dropdown = dcc.Dropdown(
     id="dropdown-system-name-2",
-    # TODO Droop LR, Imperali LR, Imperiali HA, Hagenbach-Bischoff
     options=[
         {'label': "d'Hondt", 'value': 'dHondt'},
-        {'label': "Sainte-Laguë", 'value': 'SL'}, # https://en.wikipedia.org/wiki/Webster/Sainte-Lagu%C3%AB_method
-        #{'label': "Modified Sainte-Laguë", 'value': 'MSL'}, # https://en.wikipedia.org/wiki/Webster/Sainte-Lagu%C3%AB_method
-        {'label': "LRM (Hare Quota)", 'value': 'LRM-Hare'}, # https://en.wikipedia.org/wiki/Largest_remainder_method
+        {'label': "Sainte-Laguë", 'value': 'SL'},  # https://en.wikipedia.org/wiki/Webster/Sainte-Lagu%C3%AB_method
+        {'label': "LRM (Hare Quota)", 'value': 'LRM-Hare'},  # https://en.wikipedia.org/wiki/Largest_remainder_method
         {'label': "LRM (Droop Quota)", 'value': 'LRM-Droop'},
         {'label': "LRM (Hagenbach-Bischoff Quota)", 'value': 'LRM-HB'},
         {'label': "LRM (Imperiali Quota)", 'value': 'LRM-Imperiali'},
@@ -270,16 +243,26 @@ system_2_group = html.Div([
     system_2_threshold,
 ])
 
-## GRAPHS
+system_unselected_color = '#F4CCCC'
+
+# GRAPHS
+
 graphs = dbc.Row([
     dbc.Col(html.Div([
             dcc.Graph(id='chart'),
-            dcc.Graph(id='pie-1'),
-        ]),
+            dcc.Graph(id='pie-1')]
+        ),
         width=7,
     ),
-    dbc.Col(dcc.Graph(id='map'), width=5),
+    dbc.Col(html.Div([
+            dcc.Graph(id='map', clear_on_unhover=True),
+            dcc.Tooltip(id="graph-tooltip", direction="bottom")]
+        ),
+        width=5
+    ),
 ])
+
+# STYLES AND FINAL LAYOUT
 
 SIDEBAR_STYLE = {
     "position": "fixed",
@@ -291,8 +274,6 @@ SIDEBAR_STYLE = {
     "background-color": "#f8f9fa",
 }
 
-# the styles for the main content position it to the right of the sidebar and
-# add some padding.
 CONTENT_STYLE = {
     "margin-left": "22rem",
     "margin-right": "2rem",
@@ -301,11 +282,12 @@ CONTENT_STYLE = {
 
 sidebar = html.Div(
     [
-        html.H3("Comparing Electoral Systems"),
+        html.H3("Comparing Electoral Systems", id='dashboard-title'),
         html.Hr(),
-        dbc.Row([dbc.Col(html.P("Select country, election date and metric to be displayed", className="lead"), width=10),
-                 dbc.Col(countries_button, width=2)
-        ]),
+        dbc.Row([
+            dbc.Col(html.P("Select country, election date and metric to be displayed", className="lead"), width=10),
+            dbc.Col(countries_button, width=2)]
+        ),
         dropdown_countries,
         dropdown_elections,
         dropdown_metrics,
@@ -330,23 +312,27 @@ app.layout = html.Div([
 
 print("Everything is loaded!")
 
-#######################
-###### CALLBACKS ######
-#######################
+#############
+# CALLBACKS #
+#############
+
 
 # Make this callback on the client side?
 @app.callback(
-    [Output('dropdown-elections', 'options'),
+    Output('dropdown-elections', 'options'),
     Output('dropdown-elections', 'value'),
     Output('dropdown-region-level-1', 'options'),
     Output('dropdown-region-level-1', 'value'),
     Output('dropdown-region-level-2', 'options'),
     Output('dropdown-region-level-2', 'value'),
-    ],
-    Input('dropdown-countries', 'value'))
+    Input('dropdown-countries', 'value'),
+)
 def switch_country(country):
-    if country=='Spain':
-        election_options=[
+    """
+    Update the election options whenever the selected country changes.
+    """
+    if country == 'Spain':
+        election_options = [
             {'label': '2019-11-10', 'value': '2019-11-10'},
             {'label': '2019-04-28', 'value': '2019-04-28'},
             {'label': '2016-06-26', 'value': '2016-06-26'},
@@ -358,256 +344,180 @@ def switch_country(country):
         ]
         election_value = '2019-11-10'
 
-        level_options=[
+        level_options = [
             {'label': '0: Country', 'value': 0},
             {'label': '1: Aut. Community', 'value': 1},
             {'label': '2: Province', 'value': 2},
         ]
         level_value = 2
+    elif country == 'USA':
+        election_options = [
+            {'label': '2020', 'value': '2020'},
+        ]
+        election_value = '2020'
+
+        level_options = [
+            {'label': '0: Country', 'value': 0},
+            {'label': '1: State', 'value': 1},
+            {'label': '2: District', 'value': 2},
+        ]
+        level_value = 2
     return election_options, election_value, level_options, level_value, level_options, level_value
+
 
 @app.callback(
     Output("about-modal", "is_open"),
-    [Input("about-button", "n_clicks")],
-    [State("about-modal", "is_open")],
+    Input("about-button", "n_clicks"),
+    State("about-modal", "is_open"),
 )
-def toggle_modal(n1, is_open):
+def toggle_about_modal(n1, is_open):
     if n1:
         return not is_open
     return is_open
+
 
 @app.callback(
     Output("countries-modal", "is_open"),
-    [Input("countries-button", "n_clicks")],
-    [State("countries-modal", "is_open")],
+    Input("countries-button", "n_clicks"),
+    State("countries-modal", "is_open"),
 )
-def toggle_modal(n1, is_open):
+def toggle_countries_modal(n1, is_open):
     if n1:
         return not is_open
     return is_open
+
 
 @app.callback(
     Output("systems-modal", "is_open"),
-    [Input("systems-button", "n_clicks")],
-    [State("systems-modal", "is_open")],
+    Input("systems-button", "n_clicks"),
+    State("systems-modal", "is_open"),
 )
-def toggle_modal(n1, is_open):
+def toggle_systems_modal(n1, is_open):
     if n1:
         return not is_open
     return is_open
 
-@app.callback([
-        Output('map', 'figure'),
-        Output('chart', 'figure'),
-        Output('pie-1', 'figure'),
-        Output('dropdown-system-name-2', 'disabled'),
-        Output('dropdown-region-level-2', 'disabled'),
-        Output('threshold-2', 'disabled'),
-        Output('dropdown-system-name-2', 'style'),
-        Output('dropdown-region-level-2', 'style'),
-        Output('threshold-2', 'style'),
-    ],
-    [
-        Input("dropdown-metrics", "value"),
-        Input('dropdown-system-name-1', 'value'),
-        Input('dropdown-region-level-1', 'value'),
-        Input('threshold-1', 'value'),
-        Input('threshold-switch-1', 'on'),
-        Input('dropdown-system-name-2', 'value'),
-        Input('dropdown-region-level-2', 'value'),
-        Input('threshold-2', 'value'),
-        Input('threshold-switch-2', 'on'),
-        Input('dropdown-elections', 'value'),
-    ],
-    [
-        State('dropdown-countries', 'value'),
-    ])
-def update_maps(metric, system_1, level_1, threshold_1, threshold_1_country, system_2, level_2, threshold_2, threshold_2_country, elections, country):
-    election = ELECTIONS[country][elections]
 
-    regions = election.regions()
+@app.callback(
+    Output('map', 'figure'),
+    Output('chart', 'figure'),
+    Output('pie-1', 'figure'),
+    Output('dropdown-system-name-2', 'disabled'),
+    Output('dropdown-region-level-2', 'disabled'),
+    Output('threshold-2', 'disabled'),
+    Output('dropdown-system-name-2', 'style'),
+    Output('dropdown-region-level-2', 'style'),
+    Output('threshold-2', 'style'),
+    Input("dropdown-metrics", "value"),
+    Input('dropdown-system-name-1', 'value'),
+    Input('dropdown-region-level-1', 'value'),
+    Input('threshold-1', 'value'),
+    Input('threshold-switch-1', 'on'),
+    Input('dropdown-system-name-2', 'value'),
+    Input('dropdown-region-level-2', 'value'),
+    Input('threshold-2', 'value'),
+    Input('threshold-switch-2', 'on'),
+    Input('dropdown-elections', 'value'),
+    State('dropdown-countries', 'value'),
+)
+def update_figures(metric, system_name_1, level_1, threshold_1, threshold_1_country,
+                   system_name_2, level_2, threshold_2, threshold_2_country, election_date,
+                   country):
+    """
+    Dash callback to display the figures according to the parameters specified
+    by the user.
 
-    level = min(level_1, level_2)
-    locations = [region.name for region in regions[level]]
+    The callback is triggered whenever the metric to be displayed is modified,
+    or whenever any parameter either in system 1 or system 2 changes.
+    This callbacks modifies all three figures of the dashboard: The bar chart,
+    the pie chart and the map.
+    """
+    election = ELECTIONS[country][election_date]
+    regions = election.regions
+    country_region = next(iter(regions[0].values()))
 
-    s1 = {'name': system_1, 'level': level_1, 'threshold': threshold_1, 'threshold_country': threshold_1_country}
-    s2 = {'name': system_2, 'level': level_2, 'threshold': threshold_2, 'threshold_country': threshold_2_country}
+    system_1 = electoral_systems.System(system_name_1, level_1, threshold_1, threshold_1_country)
+    result_1 = country_region.compute_result(system_1)
 
-    if metric.startswith('Seat Difference'):
+    if metric == 'Seat Difference':
         disable = False
-        dropdown_style={'font-size': '20px', 'margin-top': '5px'}
+        dropdown_style = {'font-size': '20px', 'margin-top': '5px'}
 
-        metrics = election.get_compare_metrics(s1, s2)
+        system_2 = electoral_systems.System(system_name_2, level_2, threshold_2, threshold_2_country)
+        result_2 = country_region.compute_result(system_2)
 
-        final_results_1 = Counter()
-        final_results_2 = Counter()
-        for region in regions[level]:
-            final_results_1 += metrics['results_1'][region.name]
-        for region in regions[level]:
-            final_results_2 += metrics['results_2'][region.name]
+        map = result_1.get_map_plot(other=result_2)
+        pie = result_1.get_piechart_plot(other=result_2)
+        bar = result_1.get_bar_plot(metric, other=result_2)
 
-        hover_strings = []
-        for r in locations:
-            hover_string = f"{sum(metrics['results_1'][r].values())} seats <br><br>"
-            region_parties = [key for key,value in sorted(metrics['results_1'][r].items(), key=lambda x : x[1], reverse=True)]
-            for k in metrics['results_2'][r]:
-                if k not in metrics['results_1'][r]:
-                    region_parties.append(k)
-            #region_parties = list(set(metrics['results_1'][r].keys()).union(set(metrics['results_2'][r].keys())))
-            for p in region_parties:
-                hover_string += f"{p} \t"
-                if p in metrics['results_1'][r]:
-                    hover_string += f"{metrics['results_1'][r][p]} \t"
-                else:
-                    hover_string += "0 \t"
-                if p in metrics['results_2'][r]:
-                    hover_string += f"{metrics['results_2'][r][p]} <br>"
-                else:
-                    hover_string += "0 <br>"
-            hover_string += f"<extra>{r}</extra>"
-            hover_strings.append(hover_string)
+    elif metric == 'Lost Votes':
+        disable = True
+        dropdown_style = {'font-size': '20px', 'margin-top': '5px', 'backgroundColor': system_unselected_color}
 
-        seat_diff = list(metrics['seat_diff'].values())
-
-        map_fig = go.Figure(go.Choroplethmapbox(
-            geojson=election.country.regions()[level]['geojson'],
-            locations=locations,
-            z=seat_diff,
-            colorscale="Reds", # Options: Greys,YlGnBu,Greens,YlOrR d,Bluered,RdBu,Reds,Blues,Picnic,Rainbow,Portland,Jet,H ot,Blackbody,Earth,Electric,Viridis,Cividis.
-            zmin=0, zmax=max(10, max(seat_diff)),
-            marker_line_width=1,
-            customdata = hover_strings,
-            hovertemplate = '%{customdata}',
-            ),
-        )
-        map_fig.update_layout(title='Seat difference per Region')
-
-        seats_won = {k:v for k,v in metrics['seats_won'].items() if v != 0}
-        seats_won = dict(sorted(seats_won.items(), key=lambda item: item[1], reverse=True))
-        bar_colors = [election.colors[k] for k in seats_won.keys()]
-        bar_fig = go.Figure(data=[go.Bar(
-            x = [k for k in seats_won.keys()],
-            y = [v for v in seats_won.values()],
-            marker_color = bar_colors,
-        )])
-        bar_title = 'Total Seats Won/Lost\t (TotalSeat Difference: {}/{} -- {:.2f}%)'.format(sum(seat_diff), regions[0][0].n_seats, 100 * (sum(seat_diff)) / regions[0][0].n_seats)
-        bar_fig.update_layout(
-            #title='Total Seats Won/Lost',
-            title=bar_title,
-            yaxis=dict(
-                title='Seats Sys 1 - Seats Sys 2',
-                titlefont_size=16,
-                tickfont_size=14,
-            ),
-        )
-        bar_fig.update_layout(margin=dict(t=40, b=20, l=0, r=0))
-
-        card_1_header = 'Total Seat Difference'
-        card_1_title = str(sum(seat_diff)) + '/' + str(regions[0][0].n_seats)
-        card_2_header = 'Seat Difference Percentage'
-        card_2_title = "{:.2f}%".format(100 * (sum(seat_diff)) / regions[0][0].n_seats)
-
-        # Pie charts
-        labels = list(set(final_results_1.keys()).union(set(final_results_2.keys())))
-        colors = [election.colors[x] for x in labels]
-        # Create subplots: use 'domain' type for Pie subplot
-        pie = make_subplots(rows=1, cols=2, specs=[[{'type':'domain'}, {'type':'domain'}]])
-        pie.add_trace(go.Pie(labels=labels, values=[final_results_1[x] if x in final_results_1 else 0 for x in labels],
-                             name="System 1", marker_colors=colors),
-                      1, 1)
-        pie.add_trace(go.Pie(labels=labels, values=[final_results_2[x] if x in final_results_2 else 0 for x in labels],
-                             name="System 2", marker_colors=colors),
-                      1, 2)
-        # Use `hole` to create a donut-like pie chart
-        pie.update_traces(hole=.4, hoverinfo="label+percent+name", textinfo='value', textfont_size=20, textposition='inside')
-        pie.update_layout(
-            title="Final results",
-            uniformtext_minsize=12,
-            uniformtext_mode='hide',
-            # Add annotations in the center of the donut pies.
-            annotations=[dict(text='Sys. 1', x=0.18, y=0.5, font_size=20, showarrow=False),
-                         dict(text='Sys. 2', x=0.82, y=0.5, font_size=20, showarrow=False)],
-        )
-        pie.update_layout(margin=dict(t=40, b=10, l=0, r=0))
+        map = result_1.get_map_plot()
+        pie = result_1.get_piechart_plot()
+        bar = result_1.get_bar_plot(metric)
 
     else:
-        disable = True
-        dropdown_style={'font-size': '20px', 'margin-top': '5px', 'backgroundColor': system_unselected_color}
+        raise ValueError("You got the metric name wrong!")
 
-        metrics = election.get_single_metrics(s1)
-
-        lost_votes_percentage = list(metrics['lost_votes_percentage'].values())
-        total_votes = sum(regions[0][0].votes.values())
-        map_fig = go.Figure(go.Choroplethmapbox(
-            geojson=election.country.regions()[level]['geojson'],
-            locations=locations,
-            z=lost_votes_percentage,
-            colorscale="Reds",
-            zmin=0, zmax=1,
-            marker_line_width=1
-        ))
-        map_fig.update_layout(title='Percentage of Lost Votes per Region')
-
-        party_lost_votes = metrics['party_lost_votes']
-        total_lost_votes = sum(party_lost_votes.values())
-        party_lost_votes = party_lost_votes.most_common(10)
-        bar_colors = [election.colors[x[0]] if x[0] in election.colors else '#7D7D7D' for x in party_lost_votes]
-        bar_fig = go.Figure(data=[go.Bar(
-            x = [x[0] for x in party_lost_votes],
-            y = [x[1] for x in party_lost_votes],
-            marker_color = bar_colors,
-        )])
-        bar_title = 'Lost Votes per Party\t (Total Lost Votes: {:,} -- {:.2f}%)'.format(total_lost_votes, 100 * total_lost_votes / total_votes)
-        bar_fig.update_layout(
-            title_text=bar_title,
-            yaxis=dict(
-                title='Lost Votes',
-                titlefont_size=16,
-                tickfont_size=14,
-            ),
-        )
-        bar_fig.update_layout(margin=dict(t=40, b=20, l=0, r=0))
-
-        card_1_header = 'Total Lost Votes'
-        card_1_title = '{:,}'.format(total_lost_votes)
-        card_2_header = 'Total % of Lost Votes'
-        card_2_title = "{:.2f}%".format(100 * total_lost_votes / total_votes)
-
-        pie = {}
-        # Pie charts
-        final_results_1 = metrics['final_results']
-        labels = list(final_results_1.keys())
-        colors = [election.colors[x] for x in labels]
-        # Create subplots: use 'domain' type for Pie subplot
-        pie = make_subplots(rows=1, cols=1, specs=[[{'type':'domain'}]])
-        pie.add_trace(go.Pie(labels=labels, values=[final_results_1[x] if x in final_results_1 else 0 for x in labels],
-                             name="System 1", marker_colors=colors),
-                      1, 1)
-        # Use `hole` to create a donut-like pie chart
-        pie.update_traces(hole=.4, hoverinfo="label+percent+name", textinfo='value', textfont_size=20, textposition='inside')
-        pie.update_layout(
-            title_text="Final results",
-            uniformtext_minsize=12,
-            uniformtext_mode='hide',
-        )
-        pie.update_layout(margin=dict(t=40, b=10, l=0, r=0))
-        #pie_fig.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+    return map, bar, pie, disable, disable, disable, dropdown_style, dropdown_style, dropdown_style
 
 
-    map_fig.update_layout(mapbox_style="light",
-                          mapbox_accesstoken=MAPBOX_ACCESS_TOKEN,
-                          mapbox_zoom=election.country.zoom(),
-                          mapbox_center = election.country.center(),
-                          margin={"r":0,"t":40,"l":0,"b":0},
-                          height=900,
-                          font={'size': 16})
+@app.callback(
+    Output("graph-tooltip", "show"),
+    Output("graph-tooltip", "bbox"),
+    Output("graph-tooltip", "children"),
+    Input("map", "hoverData"),
+    State("dropdown-countries", "value"),
+    State("dropdown-elections", "value"),
+    State("dropdown-metrics", "value"),
+    State('dropdown-system-name-1', 'value'),
+    State('dropdown-region-level-1', 'value'),
+    State('threshold-1', 'value'),
+    State('threshold-switch-1', 'on'),
+    State('dropdown-system-name-2', 'value'),
+    State('dropdown-region-level-2', 'value'),
+    State('threshold-2', 'value'),
+    State('threshold-switch-2', 'on'),
+)
+def display_tooltip(hoverData, country, election_date, metric, system_name_1, level_1,
+                    threshold_1, threshold_country_1, system_name_2, level_2,
+                    threshold_2, threshold_country_2):
+    """
+    Dash callback to display a tooltip when the user hovers on the map regions.
 
-    bar_fig.update_layout(font={'size': 16})
+    The tooltip shows information that is relevant to the given region, given
+    the parameters specified by the user on the sidebar.
+    """
+    if hoverData is None:
+        return False, no_update, no_update
 
-    pie.update_layout(font={'size': 16})
+    bbox = hoverData["points"][0]["bbox"]
+    region_name = hoverData["points"][0]["location"]
 
-    return map_fig, bar_fig, pie, disable, disable, disable, dropdown_style, dropdown_style, dropdown_style
+    election = ELECTIONS[country][election_date]
+
+    if metric == 'Seat Difference':
+        level = min(level_1, level_2)
+    else:
+        level = level_1
+    region = election.get_region(level, region_name)
+
+    system_1 = electoral_systems.System(system_name_1, level_1, threshold_1, threshold_country_1)
+    result_1 = region.compute_result(system_1)
+
+    if metric == 'Seat Difference':
+        system_2 = electoral_systems.System(system_name_2, level_2, threshold_2, threshold_country_2)
+        result_2 = region.compute_result(system_2)
+        tooltip = result_1.plot_tooltip(other=result_2)
+    elif metric == 'Lost Votes':
+        tooltip = result_1.plot_tooltip()
+    else:
+        raise ValueError("You got the metric name wrong!")
+
+    return True, bbox, dcc.Graph(figure=tooltip)
 
 
 if __name__ == '__main__':
-    app.run_server(host='0.0.0.0', debug=True, port=800)
+    app.run_server(host='0.0.0.0', debug=True, port=8080)

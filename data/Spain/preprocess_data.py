@@ -4,49 +4,32 @@ import json
 import pandas as pd
 import pickle
 
-def preprocess_level_2_regions():
-    # level 2 == Provincias
-    gdf = geopandas.read_file('provincias-espanolas.geojson')
 
+def preprocess_geojsons():
+    # Level 2
+    gdf = geopandas.read_file('provincias-espanolas.geojson')
     map_geojson = json.loads(gdf['geometry'].to_json())
     for i in range(len(map_geojson['features'])):
         map_geojson['features'][i]['id'] = gdf['provincia'][i]
+    with open('../../app/data/Spain/level_2.geojson', 'w') as f:
+        json.dump(map_geojson, f)
 
-    regions = {}
-    for idx, row in gdf.iterrows():
-        regions[row['codigo']] = row['provincia']
-
-    result = {
-        'geojson': map_geojson,
-        'regions': regions
-    }
-    
-    with open('../../app/data/Spain/regions_level_2.pkl',"wb") as f:
-        pickle.dump(result, f, protocol=5)
-
-    return
-
-def preprocess_level_1_regions():
-    # level 1 == Comunidades autónomas
+    # Level 1
     gdf = geopandas.read_file('spain-comunidad-with-canary-islands.json')
-    
     map_geojson = json.loads(gdf['geometry'].to_json())
     for i in range(len(map_geojson['features'])):
         map_geojson['features'][i]['id'] = gdf['NAME_1'][i]
-        
-    regions = {}
-    for idx, row in gdf.iterrows():
-        regions[idx] = row['NAME_1']
-        
-    result = {
-        'geojson': map_geojson,
-        'regions': regions
-    }
-    
-    with open('../../app/data/Spain/regions_level_1.pkl',"wb") as f:
-        pickle.dump(result, f, protocol=5)
+    with open('../../app/data/Spain/level_1.geojson', 'w') as f:
+        json.dump(map_geojson, f)
 
-    return
+    # Level 0
+    countries_gdf = geopandas.read_file('../countries.geojson')
+    spain_geojson = countries_gdf.loc[countries_gdf['ADMIN'] == 'Spain']['geometry'].to_json()
+    spain_geojson = json.loads(spain_geojson)
+    spain_geojson['features'][0]['id'] = 'Spain'
+    with open('../../app/data/Spain/level_0.geojson', 'w') as f:
+        json.dump(spain_geojson, f)
+
 
 def preprocess_electoral_data(filename, date, df_cols, df_header, parties_cols, parties_header):
     df = pd.read_excel(filename,
@@ -72,7 +55,7 @@ def preprocess_electoral_data(filename, date, df_cols, df_header, parties_cols, 
         'split_votes': 0,
     }
     level_1_regions = [
-        'Andalucía', 
+        'Andalucía',
         'Aragón',
         'Cantabria',
         'Castilla y León',
@@ -134,7 +117,7 @@ def preprocess_electoral_data(filename, date, df_cols, df_header, parties_cols, 
             n_seats += row[f"Diputados.{i}"]
         nota = row['Votos en blanco']
         split_votes = row['Votos nulos']
-            
+
         level_2_data[region_name] = {
             'region_name': region_name,
             'level': 2,
@@ -144,10 +127,10 @@ def preprocess_electoral_data(filename, date, df_cols, df_header, parties_cols, 
             'nota': nota,
             'split_votes': split_votes,
         }
-        
+
         # Add level 1 data
         lvl1_name = row['Nombre de Comunidad'].strip()
-        if 'Ceuta' in lvl1_name or 'Melilla' in lvl1_name: # Ciudad de Ceuta, Ciudad de Melilla
+        if 'Ceuta' in lvl1_name or 'Melilla' in lvl1_name:  # Ciudad de Ceuta, Ciudad de Melilla
             lvl1_name = 'Ceuta y Melilla'
         elif lvl1_name == 'Castilla - La Mancha':
             lvl1_name = 'Castilla-La Mancha'
@@ -180,7 +163,6 @@ def preprocess_electoral_data(filename, date, df_cols, df_header, parties_cols, 
         level_0_data['nota'] += nota
         level_0_data['split_votes'] += split_votes
 
-
     result = {
         'parties': parties,
         'data': {
@@ -189,22 +171,21 @@ def preprocess_electoral_data(filename, date, df_cols, df_header, parties_cols, 
             2: level_2_data
         }
     }
-    
+
     output_filename = '../../app/data/Spain/election_data'
     output_filename += date
     output_filename += '.pkl'
-    with open(output_filename,"wb") as f:
+    with open(output_filename, "wb") as f:
         pickle.dump(result, f, protocol=5)
 
 
-if __name__=="__main__":
-    #preprocess_level_2_regions()
-    #preprocess_level_1_regions()
-    #preprocess_electoral_data('PROV_02_201911_1.xlsx', '_2019-11-10', 'A:ET', 5, 'Q:ET', 3)
-    #preprocess_electoral_data('PROV_02_201904_1.xlsx', '_2019-04-28', 'A:ET', 5, 'Q:ET', 3)
-    #preprocess_electoral_data('PROV_02_201606_1.xlsx', '_2016-06-26', 'A:DN', 5, 'Q:DN', 3)
-    preprocess_electoral_data('PROV_02_201512_1.xlsx', '_2015-12-20', 'A:DX', 6, 'Q:DX', 4)
-    #preprocess_electoral_data('PROV_02_201111_1.xlsx', '_2011-11-20', 'A:EJ', 5, 'Q:EJ', 3)
-    #preprocess_electoral_data('PROV_02_200803_1.xlsx', '_2008-03-09', 'A:HC', 5, 'P:HC', 3)
-    #preprocess_electoral_data('PROV_02_200403_1.xlsx', '_2004-03-14', 'A:GY', 5, 'P:GY', 3)
-    #preprocess_electoral_data('PROV_02_200003_1.xlsx', '_2000-03-12', 'A:HA', 5, 'P:HA', 3)
+if __name__ == "__main__":
+    preprocess_geojsons()
+    # preprocess_electoral_data('PROV_02_201911_1.xlsx', '_2019-11-10', 'A:ET', 5, 'Q:ET', 3)
+    # preprocess_electoral_data('PROV_02_201904_1.xlsx', '_2019-04-28', 'A:ET', 5, 'Q:ET', 3)
+    # preprocess_electoral_data('PROV_02_201606_1.xlsx', '_2016-06-26', 'A:DN', 5, 'Q:DN', 3)
+    # preprocess_electoral_data('PROV_02_201512_1.xlsx', '_2015-12-20', 'A:DX', 6, 'Q:DX', 4)
+    # preprocess_electoral_data('PROV_02_201111_1.xlsx', '_2011-11-20', 'A:EJ', 5, 'Q:EJ', 3)
+    # preprocess_electoral_data('PROV_02_200803_1.xlsx', '_2008-03-09', 'A:HC', 5, 'P:HC', 3)
+    # preprocess_electoral_data('PROV_02_200403_1.xlsx', '_2004-03-14', 'A:GY', 5, 'P:GY', 3)
+    # preprocess_electoral_data('PROV_02_200003_1.xlsx', '_2000-03-12', 'A:HA', 5, 'P:HA', 3)

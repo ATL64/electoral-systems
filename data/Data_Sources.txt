@@ -1,6 +1,11 @@
 - World country Borders
-- Spain Borders
+- Spain Borders:
 	https://github.com/deldersveld/topojson/
-	
 - Spain Elections:
 	http://www.infoelectoral.mir.es/infoelectoral/min/areaDescarga.html?method=inicio
+	
+- United States Borders:
+	https://cdmaps.polisci.ucla.edu/ (Electoral Districts)
+	https://www.weather.gov/gis/USStates (States)
+- United States Elections:
+	https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/IG0UN2

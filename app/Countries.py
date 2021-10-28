@@ -1,80 +1,142 @@
-from abc import ABC, abstractmethod
-from bidict import bidict
-import geopandas
-import json
-import pickle
+import geojson
+import os
 
 COUNTRY_LIST = [
-    'Spain'
+    'Spain',
+    'USA',
 ]
 
-countries_gdf = geopandas.read_file('data/countries.geojson')
 
-class Country(ABC):
+class Country():
+    """
+    Class representing a country.
+
+    ...
+    Attributes
+    ----------
+    center: dict
+        A dictionary {lat: x, lon: y} representing the coordinates where the
+        country map should be centered at.
+    zoom: int
+        Represents the zoom used to plot the country map.
+    regions: dict
+        A dictionary with data about the regions of the country.
+        Keys are the levels of the regions.
+        Values are the geojsons containing the boundaries of the regions on that
+        level; the id associated to a polygon needs to be the name of the
+        region.
+        Only level 0 is mandatory.
+
+    Methods
+    -------
+    get_regions(level): List
+        Return the geojson string containing all the region boundaries at a
+        given level.
+    """
     def __init__(self, name: str):
         self.name = name
         return
 
     @property
-    @abstractmethod
     def center(self):
         """
         The center of the map to be plotted. It needs to be a dictionary with
         the keys 'lat' and 'lon'.
         """
-        pass
+        return {'lat': self._center[0], 'lon': self._center[1]}
+
+    @center.setter
+    def center(self, latlon):
+        try:
+            lat, lon = latlon
+        except ValueError:
+            raise ValueError("Pass an iterable with two items (lat, lon)")
+        if not -90 <= lat <= 90:
+            raise ValueError("Latitude must be a value between -90 and 90.")
+        if not -180 <= lon <= 180:
+            raise ValueError("Longitude must be a value between -180 and 180.")
+        self._center = (lat, lon)
 
     @property
-    @abstractmethod
     def zoom(self):
         """
         An integer representing the zoom used to plot the map.
+        See https://docs.mapbox.com/help/glossary/zoom-level/ for reference.
         """
-        pass
+        return self._zoom
+
+    @zoom.setter
+    def zoom(self, value):
+        if value not in [x for x in range(23)]:
+            raise ValueError("Map zoom must be an integer between 0 and 22.")
+        self._zoom = value
 
     @property
-    @abstractmethod
     def regions(self):
         """
         A dictionary with data about the regions of the country.
-        Keys are the levels of the regions (0,1,2,3).
-        Values are dictionaries themselves, with 2 key-value pairs:
-            'geojson': the geojson with all the region boundaries with ids
-            'regions': Values are dict with the region codes and names as kvps.
+        Keys are the levels of the regions.
+        Values are the geojsons containing the boundaries of the regions on that
+        level; the id associated to a polygon needs to be the name of the
+        region.
         Only level 0 is mandatory.
         """
-        pass
+        return self._regions
+
+    @regions.setter
+    def regions(self, value):
+        if 0 not in value:
+            raise ValueError("A country-level region (0) must be specified")
+        if len(value) != len(set(value)):
+            raise ValueError("Region levels must be unique.")
+        self._regions = value
+
+    def get_geojson(self, level):
+        """
+        Return the geojson string containing all the region boundaries at a
+        given level.
+        """
+        return self._regions[level]
 
 
 class Spain(Country):
+    """
+    Class representing Spain.
+    """
     def __init__(self):
         super(Spain, self).__init__('Spain')
-        self._regions = self.parse_regions()
+        self.center = (40.3152161, -3.8320321)  # lat, lon
+        self.zoom = 4
 
-    def center(self):
-        return {'lat': 40.3152161, 'lon': -3.8320321}
-
-    def zoom(self):
-        return 4
-
-    def regions(self):
-        return self._regions
-
-    def parse_regions(self):
-        with open('data/Spain/regions_level_1.pkl', 'rb') as f:
-            level_1_data = pickle.load(f)
-
-        with open('data/Spain/regions_level_2.pkl', 'rb') as f:
-            level_2_data = pickle.load(f)
-
-        spain_geojson = countries_gdf.loc[countries_gdf['ADMIN'] == 'Spain']['geometry'].to_json()
-        spain_geojson = json.loads(spain_geojson)
-        spain_geojson['features'][0]['id'] = 'Spain'
-        result = {0: {
-                'geojson': spain_geojson,
-                'regions': 'Spain',
-            },
-            1: level_1_data,
-            2: level_2_data,
+        with open(os.path.join(os.path.dirname(__file__), 'data/Spain/level_0.geojson')) as f:
+            level_0 = geojson.load(f)
+        with open(os.path.join(os.path.dirname(__file__), 'data/Spain/level_1.geojson')) as f:
+            level_1 = geojson.load(f)
+        with open(os.path.join(os.path.dirname(__file__), 'data/Spain/level_2.geojson')) as f:
+            level_2 = geojson.load(f)
+        self.regions = {
+            0: level_0,
+            1: level_1,
+            2: level_2,
         }
-        return result
+
+class USA(Country):
+    """
+    Class representing the United States of America.
+    """
+    def __init__(self):
+        super(USA, self).__init__('USA')
+        self.center = (41.2, -97.5)
+        self.zoom = 2
+
+        with open(os.path.join(os.path.dirname(__file__), 'data/USA/level_0.geojson')) as f:
+            level_0 = geojson.load(f)
+        with open(os.path.join(os.path.dirname(__file__), 'data/USA/level_1.geojson')) as f:
+            level_1 = geojson.load(f)
+        with open(os.path.join(os.path.dirname(__file__), 'data/USA/level_2.geojson')) as f:
+            level_2 = geojson.load(f)
+        self.regions = {
+            0: level_0,
+            1: level_1,
+            2: level_2,
+        }
