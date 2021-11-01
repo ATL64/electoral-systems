@@ -1,5 +1,6 @@
 import os
 import pickle
+import plotly.graph_objects as go
 import sys
 
 myPath = os.path.dirname(os.path.abspath(__file__))
@@ -50,7 +51,35 @@ class Election():
     def __init__(self, country: countries.Country, date: str = None):
         self.date = date
         self.country = country
-        return
+        self.maps = {
+            0: go.Figure(go.Choroplethmapbox(
+                geojson=self.country.get_geojson(0),
+                locations=[x for x in self.regions[0]],
+                z=[0] * len(self.regions[0]),
+                colorscale="Reds",
+                zmin=0, zmax=1,
+                marker_line_width=1,
+                hoverinfo='none',
+            )),
+            1: go.Figure(go.Choroplethmapbox(
+                geojson=self.country.get_geojson(1),
+                locations=[x for x in self.regions[1]],
+                z=[0] * len(self.regions[1]),
+                colorscale="Reds",
+                zmin=0, zmax=1,
+                marker_line_width=1,
+                hoverinfo='none',
+            )),
+            2: go.Figure(go.Choroplethmapbox(
+                geojson=self.country.get_geojson(2),
+                locations=[x for x in self.regions[2]],
+                z=[0] * len(self.regions[2]),
+                colorscale="Reds",
+                zmin=0, zmax=1,
+                marker_line_width=1,
+                hoverinfo='none',
+            ))
+        }
 
     @property
     def regions(self):
@@ -336,7 +365,6 @@ class Spain_Election(Election):
             The path of the pickle file containing the electoral results.
         """
         date = data_file.split('_')[-1].split('.')[0]  # The date of the election is encoded in the filename
-        super(Spain_Election, self).__init__(country=spain_country, date=date)
 
         parsed_data = self._parse_data(data_file)
         self.regions = parsed_data['regions']
@@ -344,6 +372,8 @@ class Spain_Election(Election):
         self.electoral_system = electoral_systems.System(name='dHondt', level=2, threshold=3)
         self.colors = spain_colors
         self._build_region_tree()
+
+        super(Spain_Election, self).__init__(country=spain_country, date=date)
 
     def _build_region_tree(self):
         self.regions[0]['Spain'].subregions = self.regions[1].values()
@@ -460,8 +490,6 @@ usa_colors = {
 
 class USA_2020(Election):
     def __init__(self):
-        super(USA_2020, self).__init__(country=countries.USA(), date='2020')
-
         data_file = 'data/USA/election_data.pkl'
         data_file = os.path.join(os.path.dirname(__file__), data_file)
         parsed_data = self._parse_data(data_file)
@@ -470,6 +498,8 @@ class USA_2020(Election):
         self.electoral_system = electoral_systems.System(name='dHondt', level=2, threshold=0)
         self.colors = usa_colors
         self._build_region_tree()
+
+        super(USA_2020, self).__init__(country=countries.USA(), date='2020')
 
     def _build_region_tree(self):
         self.regions[0]['USA'].subregions = self.regions[1].values()

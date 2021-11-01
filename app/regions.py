@@ -11,7 +11,7 @@ myPath = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, myPath)
 
 # Mapbox token for the choropleth maps
-MAPBOX_ACCESS_TOKEN = os.environ.get('MAPBOX_ACCESS_TOKEN', None) 
+MAPBOX_ACCESS_TOKEN = os.environ.get('MAPBOX_ACCESS_TOKEN', None)
 MAPBOX_STYLE = "mapbox://styles/plotlymapbox/cjvprkf3t1kns1cqjxuxmwixz"
 
 
@@ -389,15 +389,11 @@ class Election_Result():
                 n_region_votes = sum(region.votes.values())
                 lost_votes_percentage.append(n_region_lost_votes / n_region_votes)
 
-            map = go.Figure(go.Choroplethmapbox(
-                geojson=self.region.election.country.get_geojson(self.level),
-                locations=locations,
+            map = self.region.election.maps[self.level]
+            map.update_traces(
                 z=lost_votes_percentage,
-                colorscale="Reds",
                 zmin=0, zmax=1,
-                marker_line_width=1,
-                hoverinfo='none',
-            ))
+            )
             map.update_layout(title='Percentage of Lost Votes per Region')
 
         else:  # Means that we're computing Seat Difference
@@ -415,15 +411,10 @@ class Election_Result():
                 n_different_seats = sum([x for x in seat_diff_counter.values() if x > 0])
                 seat_diff.append(n_different_seats)
 
-            map = go.Figure(go.Choroplethmapbox(
-                geojson=self.region.election.country.get_geojson(level),
-                locations=locations,
+            map = self.region.election.maps[self.level]
+            map.update_traces(
                 z=seat_diff,
-                colorscale="Reds",
                 zmin=0, zmax=max(10, max(seat_diff)),
-                marker_line_width=1,
-                hoverinfo='none',
-                ),
             )
             map.update_layout(title='Seat difference per Region')
 

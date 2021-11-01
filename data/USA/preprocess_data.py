@@ -7,10 +7,10 @@ import pickle
 
 def preprocess_geojsons():
     # Level 2
-    districts_gdf = gpd.read_file("districts114/districtShapes/districts114.shp")
+    districts_gdf = gpd.read_file("districts114_simplified/districts114.shp")
     districts_gdf = districts_gdf[districts_gdf['STATENAME'] != 'District Of Columbia']
     districts_gdf['name'] = districts_gdf['STATENAME'] + '_' + districts_gdf['DISTRICT']
-    districts_gdf['geometry'] = districts_gdf['geometry'].apply(lambda x: x.simplify(0.2))
+    # districts_gdf['geometry'] = districts_gdf['geometry'].apply(lambda x: x.simplify(0.2))
     map_geojson = json.loads(districts_gdf['geometry'].to_json())
     for i in range(len(map_geojson['features'])):
         map_geojson['features'][i]['id'] = districts_gdf['name'].iloc[i]
@@ -18,12 +18,12 @@ def preprocess_geojsons():
         json.dump(map_geojson, f)
 
     # Level 1
-    states_gdf = gpd.read_file("states/s_11au16.shp")
+    states_gdf = gpd.read_file("states_simplified/s_11au16.shp")
     good_states = set()
     for state in pd.unique(states_gdf['NAME']):
         good_states.add(state)
     states_gdf = states_gdf[states_gdf['NAME'].isin(good_states)]
-    states_gdf['geometry'] = states_gdf['geometry'].apply(lambda x: x.simplify(0.2))
+    # states_gdf['geometry'] = states_gdf['geometry'].apply(lambda x: x.simplify(0.2))
     map_geojson = json.loads(states_gdf['geometry'].to_json())
     for i in range(len(map_geojson['features'])):
         map_geojson['features'][i]['id'] = states_gdf['NAME'].iloc[i]
