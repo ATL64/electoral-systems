@@ -283,6 +283,7 @@ CONTENT_STYLE = {
 sidebar = html.Div(
     [
         html.H3("Comparing Electoral Systems", id='dashboard-title'),
+        about_button,
         html.Hr(),
         dbc.Row([
             dbc.Col(html.P("Select country, election date and metric to be displayed", className="lead"), width=10),
@@ -298,7 +299,6 @@ sidebar = html.Div(
         html.Hr(),
         html.H3("", id='extra-text-title'),
         html.P("", id='extra-text', style={'font-size': '25px'}),
-        about_button,
     ],
     style=SIDEBAR_STYLE,
 )

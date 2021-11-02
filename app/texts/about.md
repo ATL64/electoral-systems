@@ -22,10 +22,13 @@ electoral laws could have had in past elections. It is important to emphasise
 the hypothetical 'could' since, in some cases, different electoral laws might
 have forced political parties to follow different strategies.
 
+For more information about the different values that can be selected in the
+dropdown menus and their meanings, click on the question mark (?) buttons.
+
 This tool is currently under development; in the near future we're planning to
-improve the visualisation, add metrics, countries and elections. We're also
-planning to open-source the code, so that people can contribute if they want to.
-We will also publish a guide on how to add new countries to the tool.
+improve the visualisation, add metrics, countries and elections. We also
+open-sourced the code at https://github.com/Valiant-Data/electoral-systems, so
+that people can contribute if they want to.
 
 If you have any suggestions or find any bugs/malfunctions, please contact us at
 alejandrodemiquel@gmail.com.
