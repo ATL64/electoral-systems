@@ -8,7 +8,7 @@ services:
   github:
     branch: main
     deploy_on_push: true
-    repo: alejandrodemiquel/electoral-systems
+    repo: Valiant-Data/electoral-systems
   http_port: 8080
   instance_count: 1
   instance_size_slug: basic-xxs
