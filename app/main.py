@@ -363,7 +363,7 @@ def switch_country(country):
             {'label': '2: District', 'value': 2},
         ]
         level_value = 2
-    return election_options, election_value, level_options, level_value, level_options, max(level_value-1, 0)
+    return election_options, election_value, level_options, level_value, level_options, level_value
 
 
 @app.callback(
