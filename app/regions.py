@@ -411,7 +411,7 @@ class Election_Result():
                 n_different_seats = sum([x for x in seat_diff_counter.values() if x > 0])
                 seat_diff.append(n_different_seats)
 
-            map = self.region.election.maps[self.level]
+            map = self.region.election.maps[level]
             map.update_traces(
                 z=seat_diff,
                 zmin=0, zmax=max(10, max(seat_diff)),
