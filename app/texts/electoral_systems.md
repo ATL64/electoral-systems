@@ -50,3 +50,8 @@ a regional level, you need to toggle the 'Country' switch on.
   - Method: d'Hondt
   - Level: 2
   - Threshold: 3% (region level)
+
+- USA
+  - Method: None (1 rep/district)
+  - Level: 2
+  - Threshold: None

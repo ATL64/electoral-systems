@@ -20,7 +20,8 @@ on parliamentary majorities.
 This is a tool to visualise the effect that the application of different
 electoral laws could have had in past elections. It is important to emphasise
 the hypothetical 'could' since, in some cases, different electoral laws might
-have forced political parties to follow different strategies.
+have forced political parties to follow different strategies and voters to vote
+for a different party.
 
 For more information about the different values that can be selected in the
 dropdown menus and their meanings, click on the question mark (?) buttons.
@@ -28,7 +29,7 @@ dropdown menus and their meanings, click on the question mark (?) buttons.
 This tool is currently under development; in the near future we're planning to
 improve the visualisation, add metrics, countries and elections. We also
 open-sourced the code at https://github.com/Valiant-Data/electoral-systems, so
-that people can contribute if they want to.
+that anyone who wants can contribute.
 
 If you have any suggestions or find any bugs/malfunctions, please contact us at
 alejandrodemiquel@gmail.com.

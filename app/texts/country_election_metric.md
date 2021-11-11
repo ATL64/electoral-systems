@@ -8,6 +8,7 @@ Our databse only has detailed information about elections in the following
 countries:
 
 - Spain
+- USA
 
 ## Election
 
