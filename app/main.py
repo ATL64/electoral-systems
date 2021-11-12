@@ -17,6 +17,9 @@ with open('texts/electoral_systems.md', 'r') as file:
 
 # initialize all the elections so that all the data loading is done when starting the app
 ELECTIONS = {
+    'Costa Rica': {
+        '2018': elections.Costa_Rica_2018(),
+    },
     'Spain': {
         '2019-11-10': elections.Spain_2019_11(),
         '2019-04-28': elections.Spain_2019_04(),
@@ -125,6 +128,7 @@ system_1_dropdown = dcc.Dropdown(
     options=[
         {'label': "d'Hondt", 'value': 'dHondt'},
         {'label': "Sainte-Laguë", 'value': 'SL'},  # https://en.wikipedia.org/wiki/Webster/Sainte-Lagu%C3%AB_method
+        {'label': "Winner Takes All", 'value': "Winner Takes All"},
         {'label': "LRM (Hare Quota)", 'value': 'LRM-Hare'},  # https://en.wikipedia.org/wiki/Largest_remainder_method
         {'label': "LRM (Droop Quota)", 'value': 'LRM-Droop'},
         {'label': "LRM (Hagenbach-Bischoff Quota)", 'value': 'LRM-HB'},
@@ -153,7 +157,7 @@ system_1_threshold = dbc.Row([
     dbc.Col(
         dcc.Dropdown(
             id="threshold-1",
-            options=[{'label': str(x)+'%', 'value': x} for x in range(16)],
+            options=[{'label': str(x)+'%', 'value': str(x)} for x in range(16)] + [{'label': 'n/2s', 'value': 'n/2s'}],
             placeholder='Threshold',
             value=3,
             style={'font-size': '20px', 'margin-top': '5px'},
@@ -176,7 +180,7 @@ system_1_threshold = dbc.Row([
 system_1_group = html.Div([
     dbc.Row([
         dbc.Col(html.P('System 1', style={'font-size': '20px'}), width=10),
-        dbc.Col(systems_button, width=2)
+        dbc.Col(systems_button, width=2),
     ]),
     system_1_dropdown,
     system_1_levels,
@@ -188,6 +192,7 @@ system_2_dropdown = dcc.Dropdown(
     options=[
         {'label': "d'Hondt", 'value': 'dHondt'},
         {'label': "Sainte-Laguë", 'value': 'SL'},  # https://en.wikipedia.org/wiki/Webster/Sainte-Lagu%C3%AB_method
+        {'label': "Winner Takes All", 'value': "Winner Takes All"},
         {'label': "LRM (Hare Quota)", 'value': 'LRM-Hare'},  # https://en.wikipedia.org/wiki/Largest_remainder_method
         {'label': "LRM (Droop Quota)", 'value': 'LRM-Droop'},
         {'label': "LRM (Hagenbach-Bischoff Quota)", 'value': 'LRM-HB'},
@@ -216,7 +221,7 @@ system_2_threshold = dbc.Row([
     dbc.Col(
         dcc.Dropdown(
             id="threshold-2",
-            options=[{'label': str(x)+'%', 'value': x} for x in range(16)],
+            options=[{'label': str(x)+'%', 'value': str(x)} for x in range(16)] + [{'label': 'n/2s', 'value': 'n/2s'}],
             placeholder='Threshold',
             value=3,
             style={'font-size': '20px', 'margin-top': '5px'},
@@ -307,8 +312,8 @@ content = html.Div(graphs, style=CONTENT_STYLE)
 
 app.layout = html.Div([
         sidebar,
-        content
-    ]
+        content,
+    ],
 )
 
 print("Everything is loaded!")
@@ -332,7 +337,18 @@ def switch_country(country):
     """
     Update the election options whenever the selected country changes.
     """
-    if country == 'Spain':
+    if country == 'Costa Rica':
+        election_options = [
+            {'label': '2018', 'value': '2018'},
+        ]
+        election_value = '2018'
+
+        level_options = [
+            {'label': '0: Country', 'value': 0},
+            {'label': '1: Province', 'value': 1},
+        ]
+        level_value = 1
+    elif country == 'Spain':
         election_options = [
             {'label': '2019-11-10', 'value': '2019-11-10'},
             {'label': '2019-04-28', 'value': '2019-04-28'},

@@ -96,10 +96,16 @@ class Electoral_Region():
         If a list of valid_parties is given (as strings), only those given
         parties will be considered.
         """
+        if system.name == 'Winner Takes All' or self.n_seats == 1:
+            return {max(self.votes, key=self.votes.get): self.n_seats}
+
         if valid_parties:
             valid_votes = {p: v for p, v in self.votes.items() if p in valid_parties}
         else:
-            vote_threshold = self.total_votes*system.threshold/100
+            if system.threshold == 'n/2s':
+                vote_threshold = self.total_votes/(2*self.n_seats)
+            else:
+                vote_threshold = self.total_votes*int(system.threshold)/100
             valid_votes = {k: v for k, v in self.votes.items() if v > vote_threshold}
         round_votes = copy.deepcopy(valid_votes)
         seat_counter = Counter()
@@ -107,13 +113,13 @@ class Electoral_Region():
 
         if 'LRM' in system.name:  # Largest Remainder Method
             if 'Hare' in system.name:
-                seat_cost = sum(valid_votes.values()) / n_seats
+                seat_cost = self.total_votes / n_seats
             elif 'Droop' in system.name:
-                seat_cost = 1 + sum(valid_votes.values()) / (1 + n_seats)
+                seat_cost = 1 + self.total_votes / (1 + n_seats)
             elif 'HB' in system.name:
-                seat_cost = sum(valid_votes.values()) / (1 + n_seats)
+                seat_cost = self.total_votes / (1 + n_seats)
             elif 'Imperiali' in system.name:
-                seat_cost = sum(valid_votes.values()) / (2 + n_seats)
+                seat_cost = self.total_votes / (2 + n_seats)
             remainders = {}
             seats_given = 0
             for party in valid_votes:
@@ -124,11 +130,12 @@ class Electoral_Region():
                 seats_given += n
 
             remainders = {k: v for k, v in sorted(remainders.items(), key=lambda item: item[1], reverse=True)}
-            for party in remainders:
-                if seats_given >= n_seats:
-                    break
-                seat_counter[party] += 1
-                seats_given += 1
+            while seats_given < n_seats:
+                for party in remainders:
+                    if seats_given >= n_seats:
+                        break
+                    seat_counter[party] += 1
+                    seats_given += 1
 
             if 'Imperiali' in system.name or 'HB' in system.name:
                 if seats_given > self.n_seats:

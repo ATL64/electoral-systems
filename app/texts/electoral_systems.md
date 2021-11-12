@@ -46,12 +46,17 @@ a regional level, you need to toggle the 'Country' switch on.
 
 ## Electoral Systems by Country
 
+- Costa Rica
+  - Method: LRM (Hare Quota)
+  - Level: 1
+  - Threshold: n/2s (region level)
+
 - Spain
   - Method: d'Hondt
   - Level: 2
   - Threshold: 3% (region level)
 
 - USA
-  - Method: None (1 rep/district)
+  - Method: Winner Takes All (1 rep/district)
   - Level: 2
   - Threshold: None

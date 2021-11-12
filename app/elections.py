@@ -51,35 +51,17 @@ class Election():
     def __init__(self, country: countries.Country, date: str = None):
         self.date = date
         self.country = country
-        self.maps = {
-            0: go.Figure(go.Choroplethmapbox(
-                geojson=self.country.get_geojson(0),
-                locations=[x for x in self.regions[0]],
-                z=[0] * len(self.regions[0]),
-                colorscale="Reds",
-                zmin=0, zmax=1,
-                marker_line_width=1,
-                hoverinfo='none',
-            )),
-            1: go.Figure(go.Choroplethmapbox(
-                geojson=self.country.get_geojson(1),
-                locations=[x for x in self.regions[1]],
-                z=[0] * len(self.regions[1]),
-                colorscale="Reds",
-                zmin=0, zmax=1,
-                marker_line_width=1,
-                hoverinfo='none',
-            )),
-            2: go.Figure(go.Choroplethmapbox(
-                geojson=self.country.get_geojson(2),
-                locations=[x for x in self.regions[2]],
-                z=[0] * len(self.regions[2]),
+        self.maps = {}
+        for level in range(len(self.regions)):
+            self.maps[level] = go.Figure(go.Choroplethmapbox(
+                geojson=self.country.get_geojson(level),
+                locations=[x for x in self.regions[level]],
+                z=[0] * len(self.regions[level]),
                 colorscale="Reds",
                 zmin=0, zmax=1,
                 marker_line_width=1,
                 hoverinfo='none',
             ))
-        }
 
     @property
     def regions(self):
@@ -160,13 +142,17 @@ class Election():
         a list of parties that have a number of votes above that threshold.
         """
         total_votes = sum(self._regions[0][self.country.name].votes.values())
-        vote_threshold = total_votes * threshold / 100
+
+        if threshold == 'n/2s':
+            vote_threshold = total_votes / self._regions[0][self.country.name].n_seats
+        else:
+            vote_threshold = total_votes * int(threshold) / 100
 
         parties = [p for p, v in self._regions[0][self.country.name].votes.items() if v >= vote_threshold]
 
         return parties
 
-    def _parse_data(self, filename):
+    def _parse_data(self, filename, max_level):
         """
         Extract the data from the pickle file, initialize the Electoral_Regions.region
         objects and format the data for it to be used as attributes of an object of
@@ -187,37 +173,23 @@ class Election():
             data['data'][0]['split_votes'],
         )
 
-        level_1_electoral_regions = dict()
-        for region, results in data['data'][1].items():
-            level_1_electoral_regions[results['region_name']] = Electoral_Region(
-                self,
-                results['region_name'],
-                results['level'],
-                results['census'],
-                results['n_seats'],
-                results['votes'],
-                results['nota'],
-                results['split_votes'],
-            )
+        electoral_regions = {0: level_0_electoral_region}
 
-        level_2_electoral_regions = dict()
-        for region, results in data['data'][2].items():
-            level_2_electoral_regions[results['region_name']] = Electoral_Region(
-                self,
-                results['region_name'],
-                results['level'],
-                results['census'],
-                results['n_seats'],
-                results['votes'],
-                results['nota'],
-                results['split_votes'],
-            )
+        for level in range(1, max_level+1):
+            level_electoral_regions = dict()
+            for region, results in data['data'][level].items():
+                level_electoral_regions[results['region_name']] = Electoral_Region(
+                    self,
+                    results['region_name'],
+                    results['level'],
+                    results['census'],
+                    results['n_seats'],
+                    results['votes'],
+                    results['nota'],
+                    results['split_votes'],
+                )
+            electoral_regions[level] = level_electoral_regions
 
-        electoral_regions = {
-            0: level_0_electoral_region,
-            1: level_1_electoral_regions,
-            2: level_2_electoral_regions,
-        }
         return {'parties': data['parties'], 'regions': electoral_regions}
 
 
@@ -366,7 +338,7 @@ class Spain_Election(Election):
         """
         date = data_file.split('_')[-1].split('.')[0]  # The date of the election is encoded in the filename
 
-        parsed_data = self._parse_data(data_file)
+        parsed_data = self._parse_data(data_file, max_level=2)
         self.regions = parsed_data['regions']
         self.parties = parsed_data['parties']
         self.electoral_system = electoral_systems.System(name='dHondt', level=2, threshold=3)
@@ -492,7 +464,7 @@ class USA_2020(Election):
     def __init__(self):
         data_file = 'data/USA/election_data.pkl'
         data_file = os.path.join(os.path.dirname(__file__), data_file)
-        parsed_data = self._parse_data(data_file)
+        parsed_data = self._parse_data(data_file, max_level=2)
         self.regions = parsed_data['regions']
         self.parties = parsed_data['parties']
         self.electoral_system = electoral_systems.System(name='dHondt', level=2, threshold=0)
@@ -508,3 +480,44 @@ class USA_2020(Election):
                 self.regions[1][region_name.split('_')[0]].subregions.append(region_value)
             else:
                 self.regions[1][region_name.split('_')[0]].subregions = [region_value]
+
+
+##############
+# Costa Rica #
+##############
+
+# https://en.wikipedia.org/wiki/Category:Costa_Rica_political_party_color_templates
+cr_colors = {
+    'LIBERACIÓN NACIONAL': '#008024',
+    'RESTAURACIÓN NACIONAL': '#0059CF',
+    'ACCIÓN CIUDADANA': '#FFC700',
+    'UNIDAD SOCIAL CRISTIANA': '#0454A3',
+    'INTEGRACIÓN NACIONAL': '#122562',
+    'REPUBLICANO SOCIALCRISTIANO': '#BC141A',
+    'FRENTE AMPLIO': '#FFEE78',
+    'NUEVA GENERACIÓN': '#00A1B3',
+    'ACCESIBILIDAD SIN EXCLUSIÓN': '#4682B4',
+    'ALIANZA DEMÓCRATA CRISTIANA': '#42087B',
+    'RENOVACIÓN COSTARRICENSE': '#050045',
+    'MOVIMIENTO LIBERTARIO': '#b22027',
+    'LIBERAL PROGRESISTA': '#BF1313',
+}
+
+
+class Costa_Rica_2018(Election):
+    def __init__(self):
+        data_file = 'data/Costa Rica/election_data.pkl'
+        data_file = os.path.join(os.path.dirname(__file__), data_file)
+        parsed_data = self._parse_data(data_file, max_level=1)
+        self.regions = parsed_data['regions']
+        self.parties = parsed_data['parties']
+
+        # https://www.tse.go.cr/pdf/publicaciones/C%C3%B3mo%20se%20Elige.pdf
+        self.electoral_system = electoral_systems.System(name='LRM-Hare', level=1, threshold='n/2s')
+        self.colors = cr_colors
+        self._build_region_tree()
+
+        super(Costa_Rica_2018, self).__init__(country=countries.Costa_Rica(), date='2018')
+
+    def _build_region_tree(self):
+        self.regions[0]['Costa Rica'].subregions = self.regions[1].values()

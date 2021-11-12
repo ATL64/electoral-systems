@@ -2,6 +2,7 @@ import geojson
 import os
 
 COUNTRY_LIST = [
+    'Costa Rica',
     'Spain',
     'USA',
 ]
@@ -97,6 +98,25 @@ class Country():
         given level.
         """
         return self._regions[level]
+
+
+class Costa_Rica(Country):
+    """
+    Class representing Costa Rica.
+    """
+    def __init__(self):
+        super(Costa_Rica, self).__init__('Costa Rica')
+        self.center = (9.75, -83.96)
+        self.zoom = 6
+
+        with open(os.path.join(os.path.dirname(__file__), 'data/Costa Rica/level_0.geojson')) as f:
+            level_0 = geojson.load(f)
+        with open(os.path.join(os.path.dirname(__file__), 'data/Costa Rica/level_1.geojson')) as f:
+            level_1 = geojson.load(f)
+        self.regions = {
+            0: level_0,
+            1: level_1,
+        }
 
 
 class Spain(Country):

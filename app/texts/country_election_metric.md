@@ -7,6 +7,7 @@ Select a country, an election date and metric.
 Our databse only has detailed information about elections in the following
 countries:
 
+- Costa Rica
 - Spain
 - USA
 

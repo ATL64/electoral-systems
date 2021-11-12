@@ -1,4 +1,4 @@
-SYSTEM_NAMES = ['dHondt', 'SL', 'LRM-Hare', 'LRM-Droop', 'LRM-HB', 'LRM-Imperiali']
+SYSTEM_NAMES = ['dHondt', 'SL', 'LRM-Hare', 'LRM-Droop', 'LRM-HB', 'LRM-Imperiali', 'Winner Takes All']
 MAX_LEVEL = 3
 MAX_THRESHOLD = 15
 
@@ -65,7 +65,7 @@ class System():
 
     @threshold.setter
     def threshold(self, value):
-        if not 0 <= value <= MAX_THRESHOLD:
+        if value != 'n/2s' and not 0 <= int(value) <= MAX_THRESHOLD:
             raise ValueError("Threshold must be between 0 and {}".format(MAX_THRESHOLD))
         self._threshold = value
 

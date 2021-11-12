@@ -41,3 +41,6 @@ def test_election_result(input):
     for region in election.get_regions(level).values():
         result = region.compute_election_result(system)
         assert sum(result.values()) == region.n_seats
+
+
+# TODO Given two different systems, check that the +- in seat difference equals to 0.
