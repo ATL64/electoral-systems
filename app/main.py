@@ -414,6 +414,7 @@ def toggle_systems_modal(n1, is_open):
         return not is_open
     return is_open
 
+
 @app.callback(
     Output('map', 'figure'),
     Output('chart', 'figure'),
