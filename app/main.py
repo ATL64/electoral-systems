@@ -85,9 +85,9 @@ about_button = html.Div(
             [dbc.ModalBody(dcc.Markdown(about_md))],
             id="about-modal",
             is_open=False,
-            size='lg',
+            size='xl',
             scrollable=True,
-            style={'font-size': '20px'}
+            style={'font-size': '1.8em'}
         ),
     ],
     style={'justify-content': 'flex-end', 'display': 'flex'}
@@ -100,9 +100,9 @@ countries_button = html.Div(
             [dbc.ModalBody(dcc.Markdown(country_md))],
             id="countries-modal",
             is_open=False,
-            size='lg',
+            size='xl',
             scrollable=True,
-            style={'font-size': '20px'}
+            style={'font-size': '1.8em'}
         ),
     ],
     style={'justify-content': 'flex-end', 'display': 'flex'}
@@ -115,9 +115,9 @@ systems_button = html.Div(
             [dbc.ModalBody(dcc.Markdown(systems_md))],
             id="systems-modal",
             is_open=False,
-            size='lg',
+            size='xl',
             scrollable=True,
-            style={'font-size': '20px'}
+            style={'font-size': '1.8em'}
         ),
     ],
     style={'justify-content': 'flex-end', 'display': 'flex'}
@@ -257,13 +257,13 @@ graphs = dbc.Row([
             dcc.Graph(id='chart'),
             dcc.Graph(id='pie-1')]
         ),
-        width=7,
+        xl=7, lg=7, md=12, sm=12, xs=12,
     ),
     dbc.Col(html.Div([
             dcc.Graph(id='map', clear_on_unhover=True),
             dcc.Tooltip(id="graph-tooltip", direction="bottom")]
         ),
-        width=5
+        xl=5, lg=5, md=12, sm=12, xs=12,
     ),
 ])
 
@@ -413,7 +413,6 @@ def toggle_systems_modal(n1, is_open):
     if n1:
         return not is_open
     return is_open
-
 
 @app.callback(
     Output('map', 'figure'),

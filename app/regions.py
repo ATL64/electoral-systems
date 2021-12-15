@@ -325,7 +325,7 @@ class Election_Result():
             values=[result[x] if x in result else 0 for x in labels],
             marker_colors=colors,
             hole=.4,
-            hoverinfo="label+percent+name",
+            hovertemplate="%{label} %{percent}<extra></extra>",
             textinfo='value',
             textfont_size=10,
             textposition='inside',
@@ -462,6 +462,7 @@ class Election_Result():
             margin=dict(t=40, b=10, l=0, r=0),
             uniformtext_minsize=12,
             uniformtext_mode='hide',
+            showlegend=False,
         )
 
         return fig
@@ -510,6 +511,7 @@ class Election_Result():
             ),
             font={'size': 16},
             margin=dict(t=40, b=20, l=0, r=0),
+            xaxis={'showticklabels': False},
         )
 
         return fig
