@@ -17,7 +17,7 @@ Therefore, all the workflows are completely reproducible.
 ## Contributing
 
 Anyone can contribute by making suggestions and reporting bugs.
-Feel free to open an issue or send us an email to alejandrodemiquel@gmail.com.
+Feel free to open an issue or send us an email to alejandrodemiquel@gmail.com or atl64x@gmail.com
 
 ## Development Guide
 
