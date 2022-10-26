@@ -177,3 +177,8 @@ Currently, our tests are quite basic. They make sure that things are initialized
 correctly and do some other simple checks.
 We could make use of some contributions to test that each method gives expected
 results.
+
+
+Mentions
+
+Developed with Alejandro de Miquel https://github.com/alejandrodemiquel
