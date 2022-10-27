@@ -8,8 +8,8 @@ Main contributor for this project is Alejandro de Miquel who is a fantastic code
 This repository contains a [Dash](https://plotly.com/dash/) app aimed at
 visualising and analysing the effects that using different electoral systems
 would have had in past parliamentary elections (house of representatives).
-The app is currently hosted at
-[https://electoralsystems.app/](https://electoralsystems.app//).
+The app is currently offline.  But here is a screenshot of how it looks like:
+
 
 The app itself is contained in the folder `app`.
 The folder `data` contains information about the data sources that were used
